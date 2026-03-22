@@ -14,8 +14,8 @@ interface AdminStats {
   selector: 'app-admin-dashboard',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: `./dashboard.html`,
-  styleUrl: './dashboard.css'
+  templateUrl: `./admin-dashboard.html`,
+  styleUrl: './admin-dashboard.css'
 })
 export class AdminDashboardComponent implements OnInit {
   private readonly http = inject(HttpClient);

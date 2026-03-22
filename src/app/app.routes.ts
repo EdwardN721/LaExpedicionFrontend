@@ -66,7 +66,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
     data: { role: 'User' },
     loadComponent: () =>
-      import('./features/player/player-shell/player-shell.component').then(
+      import('./features/player/player-shell/player-shell').then(
         (m) => m.PlayerShellComponent
       ),
     children: [
@@ -75,7 +75,7 @@ export const routes: Routes = [
         pathMatch: 'full',
         loadComponent: () =>
           import(
-            './features/player/personaje/personaje.component'
+            './features/player/personaje/personaje'
           ).then((m) => m.PersonajeComponent),
       },
       {
