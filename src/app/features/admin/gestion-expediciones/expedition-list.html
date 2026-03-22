@@ -1,0 +1,138 @@
+<div>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h2 class="font-rpg text-2xl text-rpg-text">Gestión de Expediciones</h2>
+      <p class="text-rpg-muted text-sm mt-0.5">
+        {{ pagination()?.totalCount ?? 0 }} expediciones
+      </p>
+    </div>
+    <button class="btn-primary" (click)="openModal()">+ Nueva Expedición</button>
+  </div>
+
+  @if (loading()) {
+  <div class="rpg-card animate-pulse space-y-3">
+    @for (i of [1,2,3]; track i) {
+    <div class="h-12 bg-rpg-border/40 rounded"></div>
+    }
+  </div>
+  } @else {
+  <div class="rpg-card overflow-x-auto p-0">
+    <table class="rpg-table">
+      <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Dificultad</th>
+        <th>Nivel rec.</th>
+        <th>Duración</th>
+        <th>Recompensa</th>
+        <th class="text-right">Acciones</th>
+      </tr>
+      </thead>
+      <tbody>
+      @for (exp of expeditions(); track exp.id) {
+      <tr>
+        <td class="font-medium text-rpg-text">{{ exp.nombre }}</td>
+        <td>
+                    <span [class]="diffBadge(exp.dificultad)">
+                      {{ exp.dificultad }}
+                    </span>
+        </td>
+        <td>Nv. {{ exp.nivelRecomendado }}</td>
+        <td>{{ exp.duracionHoras }}h</td>
+        <td class="text-rpg-gold">
+          {{ exp.recompensaOro }} oro / {{ exp.recompensaExperiencia }} XP
+        </td>
+        <td class="text-right space-x-2">
+          <button class="text-rpg-gold hover:underline text-sm"
+                  (click)="openModal(exp)">Editar</button>
+          <button class="text-rpg-danger hover:underline text-sm"
+                  (click)="delete(exp)">Eliminar</button>
+        </td>
+      </tr>
+      } @empty {
+      <tr>
+        <td colspan="6" class="text-center text-rpg-muted py-10">
+          No hay expediciones registradas.
+        </td>
+      </tr>
+      }
+      </tbody>
+    </table>
+  </div>
+
+  @if (pagination(); as pg) {
+  <div class="flex items-center justify-between mt-4 text-sm text-rpg-muted">
+    <span>Página {{ pg.currentPage }} de {{ pg.totalPages }}</span>
+    <div class="flex gap-2">
+      <button class="btn-secondary py-1.5 px-3 text-xs"
+              [disabled]="!pg.hasPrevious"
+              (click)="changePage(pg.currentPage - 1)">Anterior</button>
+      <button class="btn-secondary py-1.5 px-3 text-xs"
+              [disabled]="!pg.hasNext"
+              (click)="changePage(pg.currentPage + 1)">Siguiente</button>
+    </div>
+  </div>
+  }
+  }
+</div>
+
+@if (showModal()) {
+<div class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+     (click)="closeModal()">
+  <div class="rpg-card w-full max-w-lg" (click)="$event.stopPropagation()">
+    <h3 class="font-rpg text-xl text-rpg-text mb-5">
+      {{ editing() ? 'Editar Expedición' : 'Nueva Expedición' }}
+    </h3>
+
+    <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
+      <div>
+        <label class="rpg-label">Nombre</label>
+        <input class="rpg-input" formControlName="nombre" />
+      </div>
+      <div>
+        <label class="rpg-label">Descripción</label>
+        <textarea class="rpg-input resize-none" rows="2" formControlName="descripcion"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="rpg-label">Nivel recomendado</label>
+          <input class="rpg-input" type="number" formControlName="nivelRecomendado" />
+        </div>
+        <div>
+          <label class="rpg-label">Duración (horas)</label>
+          <input class="rpg-input" type="number" formControlName="duracionHoras" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="rpg-label">Recompensa oro</label>
+          <input class="rpg-input" type="number" formControlName="recompensaOro" />
+        </div>
+        <div>
+          <label class="rpg-label">Recompensa XP</label>
+          <input class="rpg-input" type="number" formControlName="recompensaExperiencia" />
+        </div>
+      </div>
+      <div>
+        <label class="rpg-label">Dificultad</label>
+        <select class="rpg-input" formControlName="dificultad">
+          @for (d of dificultades; track d) {
+          <option [value]="d">{{ d }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2 border-t border-rpg-border">
+        <button type="button" class="btn-secondary" (click)="closeModal()">Cancelar</button>
+        <button type="submit" class="btn-primary" [disabled]="saving()">
+          @if (saving()) {
+          <span class="inline-block w-4 h-4 border-2 border-rpg-bg/40
+                               border-t-rpg-bg rounded-full animate-spin mr-2"></span>
+          }
+          {{ editing() ? 'Guardar' : 'Crear' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+}

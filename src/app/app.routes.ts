@@ -6,14 +6,14 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () =>
-      import('./features/auth/login/login.component').then(
+      import('./features/auth/login/login').then(
         (m) => m.LoginComponent
       ),
   },
   {
     path: 'register',
     loadComponent: () =>
-      import('./features/auth/register/register.component').then(
+      import('./features/auth/register/register').then(
         (m) => m.RegisterComponent
       ),
   },
@@ -24,7 +24,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
     data: { role: 'Admin' },
     loadComponent: () =>
-      import('./features/admin/admin-shell/admin-shell.component').then(
+      import('./features/admin/admin-shell/admin-shell').then(
         (m) => m.AdminShellComponent
       ),
     children: [
@@ -32,14 +32,14 @@ export const routes: Routes = [
         path: '',
         pathMatch: 'full',
         loadComponent: () =>
-          import('./features/admin/dashboard/admin-dashboard.component').then(
+          import('./features/admin/dashboard/admin-dashboard').then(
             (m) => m.AdminDashboardComponent
           ),
       },
       {
         path: 'items',
         loadComponent: () =>
-          import('./features/admin/gestion-items/item-list.component').then(
+          import('./features/admin/gestion-items/item-list').then(
             (m) => m.ItemListComponent
           ),
       },
@@ -47,14 +47,14 @@ export const routes: Routes = [
         path: 'expediciones',
         loadComponent: () =>
           import(
-            './features/admin/gestion-expediciones/expedition-list.component'
+            './features/admin/gestion-expediciones/expedition-list'
           ).then((m) => m.ExpeditionListComponent),
       },
       {
         path: 'usuarios',
         loadComponent: () =>
           import(
-            './features/admin/gestion-usuarios/user-list.component'
+            './features/admin/gestion-usuarios/user-list'
           ).then((m) => m.UserListComponent),
       },
     ],
@@ -81,7 +81,7 @@ export const routes: Routes = [
       {
         path: 'inventario',
         loadComponent: () =>
-          import('./features/player/inventario/inventario.component').then(
+          import('./features/player/inventario/inventario').then(
             (m) => m.InventarioComponent
           ),
       },
@@ -89,13 +89,13 @@ export const routes: Routes = [
         path: 'mapa',
         loadComponent: () =>
           import(
-            './features/player/mapa-expediciones/mapa-expediciones.component'
+            './features/player/mapa-expediciones/mapa-expediciones'
           ).then((m) => m.MapaExpedicionesComponent),
       },
       {
         path: 'historial',
         loadComponent: () =>
-          import('./features/player/historial/historial.component').then(
+          import('./features/player/historial/historial').then(
             (m) => m.HistorialComponent
           ),
       },

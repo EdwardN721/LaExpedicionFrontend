@@ -14,3 +14,15 @@ next.user-config.*
 node_modules
 .next/
 .DS_Store
+
+.angular/*
+.idea/*
+.vscode/*
+
+.angular/
+.idea/
+.vscode/
+
+.angular
+.idea
+.vscode
