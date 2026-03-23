@@ -1,38 +1,43 @@
 import { Injectable, signal } from '@angular/core';
 
-export type ToastType = 'success' | 'error' | 'info';
-
-export interface Toast {
+export interface ToastMessage {
   id: number;
   message: string;
-  type: ToastType;
+  type: 'success' | 'error' | 'info';
 }
-
-let _id = 0;
 
 @Injectable({ providedIn: 'root' })
 export class ToastService {
-  readonly toasts = signal<Toast[]>([]);
+  private toastIdCounter = 0;
+  
+  // Exponemos las notificaciones como un Signal para poder leerlas en el HTML
+  readonly toasts = signal<ToastMessage[]>([]);
 
-  success(message: string, duration = 4000): void {
-    this._add(message, 'success', duration);
+  success(message: string): void {
+    this.show(message, 'success');
   }
 
-  error(message: string, duration = 5000): void {
-    this._add(message, 'error', duration);
+  error(message: string): void {
+    this.show(message, 'error');
   }
 
-  info(message: string, duration = 4000): void {
-    this._add(message, 'info', duration);
+  info(message: string): void {
+    this.show(message, 'info');
   }
 
-  dismiss(id: number): void {
-    this.toasts.update((list) => list.filter((t) => t.id !== id));
+  remove(id: number): void {
+    this.toasts.update(current => current.filter(t => t.id !== id));
   }
 
-  private _add(message: string, type: ToastType, duration: number): void {
-    const id = ++_id;
-    this.toasts.update((list) => [...list, { id, message, type }]);
-    setTimeout(() => this.dismiss(id), duration);
+  private show(message: string, type: 'success' | 'error' | 'info'): void {
+    const id = ++this.toastIdCounter;
+    const newToast: ToastMessage = { id, message, type };
+    
+    this.toasts.update(current => [...current, newToast]);
+
+    // Auto-eliminar después de 3 segundos
+    setTimeout(() => {
+      this.remove(id);
+    }, 3000);
   }
 }

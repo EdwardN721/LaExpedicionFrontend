@@ -1,66 +1,89 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { InventarioService } from '../../../core/services/inventario.service';
 import { PlayerService } from '../../../core/services/player.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../shared/services/toast.service';
-import { InventoryItem } from '../../../core/models/player.models';
+import { InventarioDto } from '../../../core/models/player.models';
 
 @Component({
   selector: 'app-inventario',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: `./inventario.html`,
+  templateUrl: './inventario.html',
   styleUrl: './inventario.css'
 })
 export class InventarioComponent implements OnInit {
-  private readonly svc = inject(PlayerService);
+  private readonly invSvc = inject(InventarioService);
+  private readonly playerSvc = inject(PlayerService);
+  private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
 
+  readonly inventario = signal<InventarioDto[]>([]);
   readonly loading = signal(true);
-  readonly items = signal<InventoryItem[]>([]);
+  personajeId: string | null = null;
 
   ngOnInit(): void {
-    this.load();
+    const userId = this.auth.currentUser()?.sub;
+    if (userId) {
+      this.playerSvc.getPersonajeByUsuarioId(userId).subscribe({
+        next: (p) => {
+          this.personajeId = p.id;
+          this.cargarInventario();
+        },
+        error: () => { this.loading.set(false); }
+      });
+    }
   }
 
-  load(): void {
+  cargarInventario(): void {
+    if (!this.personajeId) return;
     this.loading.set(true);
-    this.svc.getInventory().subscribe({
-      next: (data) => { this.items.set(data); this.loading.set(false); },
-      error: () => { this.toast.error('Error al cargar el inventario.'); this.loading.set(false); },
-    });
-  }
-
-  toggleEquip(item: InventoryItem): void {
-    const req = item.equipado
-      ? this.svc.unequipItem(item.id)
-      : this.svc.equipItem(item.id);
-
-    req.subscribe({
-      next: () => {
-        this.toast.success(item.equipado ? `${item.nombre} desequipado.` : `${item.nombre} equipado.`);
-        this.load();
+    // Solicitamos la página 1, límite 50 (puedes ajustar o agregar controles de paginación después)
+    this.invSvc.obtenerInventario(this.personajeId, 1, 50).subscribe({
+      next: (res) => {
+        this.inventario.set(res.data);
+        this.loading.set(false);
       },
-      error: () => this.toast.error('Error al cambiar equipo.'),
+      error: () => {
+        this.toast.error('Error al abrir la mochila.');
+        this.loading.set(false);
+      }
     });
   }
 
-  dropItem(item: InventoryItem): void {
-    if (!confirm(`¿Tirar "${item.nombre}"? Esta acción no se puede deshacer.`)) return;
-    this.svc.dropItem(item.id).subscribe({
-      next: () => { this.toast.success(`${item.nombre} tirado.`); this.load(); },
-      error: () => this.toast.error('Error al tirar el item.'),
+  usarItem(item: InventarioDto): void {
+    if (item.usosRestantes <= 0) {
+      this.toast.error('El objeto está roto o vacío.');
+      return;
+    }
+    this.invSvc.usarItem(item.id).subscribe({
+      next: (res: any) => {
+        this.toast.success(res.mensaje || 'Objeto utilizado.');
+        this.cargarInventario(); // Recargamos para actualizar los usos
+      },
+      error: () => this.toast.error('No se pudo usar el objeto.')
     });
   }
 
-  durabilityPercent(item: InventoryItem): number {
-    if (!item.durabilidadMaxima || !item.usosRestantes) return 0;
-    return (item.usosRestantes / item.durabilidadMaxima) * 100;
+  equiparItem(item: InventarioDto): void {
+    this.invSvc.equiparItem(item.id).subscribe({
+      next: (res: any) => {
+        this.toast.success(res.mensaje || 'Estado de equipamiento cambiado.');
+        this.cargarInventario();
+      },
+      error: () => this.toast.error('Error al cambiar equipo.')
+    });
   }
 
-  durabilityColor(item: InventoryItem): string {
-    const p = this.durabilityPercent(item);
-    if (p > 60) return 'bg-rpg-success';
-    if (p > 25) return 'bg-rpg-gold';
-    return 'bg-rpg-danger';
+  tirarItem(item: InventarioDto): void {
+    if (!confirm(`¿Estás seguro de que deseas tirar ${item.nombreItem}? Se perderá para siempre.`)) return;
+    this.invSvc.eliminarDelInventario(item.id).subscribe({
+      next: () => {
+        this.toast.success('Objeto descartado.');
+        this.cargarInventario();
+      },
+      error: () => this.toast.error('Error al descartar el objeto.')
+    });
   }
 }

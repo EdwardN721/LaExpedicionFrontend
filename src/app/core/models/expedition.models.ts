@@ -36,3 +36,15 @@ export interface PaginatedResponse<T> {
   data: T[];
   pagination: PaginationMeta;
 }
+
+export interface ExpedicionRealizadaDto {
+  id: string; // Guid
+  nombre: string;
+  descripcion?: string | null;
+  nombrePersonaje?: string | null;
+  fechaInicio: string; // Las fechas en JSON llegan como string ISO (ej: "2026-03-22T10:00:00Z")
+  fechaFin?: string | null;
+  resultado?: string | null;
+  experienciaGanada: number;
+  dineroGanado: number;
+}
