@@ -20,7 +20,7 @@ export class AuthService {
 
   // ── Signals ────────────────────────────────────────────────────────────────
   private readonly _token = signal<string | null>(
-    localStorage.getItem(TOKEN_KEY)
+    localStorage.getItem(TOKEN_KEY),
   );
 
   readonly token = this._token.asReadonly();
@@ -33,27 +33,29 @@ export class AuthService {
   readonly isAuthenticated = computed(() => {
     const user = this.currentUser();
     if (!user) return false;
-    // Check token expiry
+    // Verifica si el token no ha expirado
     return user.exp * 1000 > Date.now();
   });
 
   readonly userRole = computed(() => this.currentUser()?.role ?? null);
 
-  readonly userName = computed(
-    () => this.currentUser()?.unique_name ?? null
-  );
+  readonly userName = computed(() => this.currentUser()?.unique_name ?? null);
 
   // ── HTTP calls ─────────────────────────────────────────────────────────────
-  login(payload: LoginRequest): Observable<AuthResponse> {
+  login(payload: LoginRequest): Observable<any> {
     return this.http
-      .post<AuthResponse>(`${environment.apiUrl}/api/auth/login`, payload)
-      .pipe(tap((res) => this._setToken(res.token)));
+      .post<any>(`${environment.apiUrl}/api/Auth/login`, payload)
+      .pipe(
+        tap((res) => {
+          if (res.token) {
+            this._setToken(res.token);
+          }
+        }),
+      );
   }
 
-  register(payload: RegisterRequest): Observable<AuthResponse> {
-    return this.http
-      .post<AuthResponse>(`${environment.apiUrl}/api/auth/register`, payload)
-      .pipe(tap((res) => this._setToken(res.token)));
+  register(payload: RegisterRequest): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/api/Usuario`, payload);    
   }
 
   logout(): void {

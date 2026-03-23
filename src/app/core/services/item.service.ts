@@ -1,49 +1,38 @@
+// src/app/core/services/item.service.ts
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import {
-  CreateItemDto,
-  Item,
-  PaginationMeta,
+import { 
+  ItemDto, 
+  CrearItemDto, 
+  ActualizarItemDto, 
+  PaginatedResponse 
 } from '../models/item.models';
-
-export interface PagedResult<T> {
-  data: T[];
-  pagination: PaginationMeta;
-}
 
 @Injectable({ providedIn: 'root' })
 export class ItemService {
   private readonly http = inject(HttpClient);
-  private readonly base = `${environment.apiUrl}/api/items`;
+  private readonly apiUrl = `${environment.apiUrl}/api/items`;
 
-  getAll(page = 1, pageSize = 10): Observable<PagedResult<Item>> {
-    const params = new HttpParams()
-      .set('pageNumber', page)
-      .set('pageSize', pageSize);
-
-    return this.http
-      .get<Item[]>(this.base, { params, observe: 'response' })
-      .pipe(
-        map((res: HttpResponse<Item[]>) => ({
-          data: res.body ?? [],
-          pagination: JSON.parse(
-            res.headers.get('X-Pagination') ?? '{}'
-          ) as PaginationMeta,
-        }))
-      );
+  getAll(page: number, limit: number): Observable<PaginatedResponse<ItemDto>> {
+    let params = new HttpParams().set('page', page).set('limit', limit);
+    return this.http.get<PaginatedResponse<ItemDto>>(this.apiUrl, { params });
   }
 
-  create(dto: CreateItemDto): Observable<Item> {
-    return this.http.post<Item>(this.base, dto);
+  getById(id: string): Observable<ItemDto> {
+    return this.http.get<ItemDto>(`${this.apiUrl}/${id}`);
   }
 
-  update(id: number, dto: Partial<CreateItemDto>): Observable<Item> {
-    return this.http.put<Item>(`${this.base}/${id}`, dto);
+  create(dto: CrearItemDto): Observable<ItemDto> {
+    return this.http.post<ItemDto>(this.apiUrl, dto);
   }
 
-  delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${id}`);
+  update(id: string, dto: ActualizarItemDto): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}`, dto);
+  }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

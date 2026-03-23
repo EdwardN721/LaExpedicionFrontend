@@ -1,106 +1,81 @@
-<div>
-  @if (loading()) {
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
-    <div class="md:col-span-1 rpg-card h-64 bg-rpg-border/40"></div>
-    <div class="md:col-span-2 rpg-card h-64 bg-rpg-border/40"></div>
-  </div>
-  } @else if (!character()) {
-  <!-- No character yet – creation form -->
-  <div class="max-w-md mx-auto mt-16 text-center">
-    <h2 class="font-rpg text-3xl text-rpg-gold mb-2">
-      Tu aventura comienza aquí
-    </h2>
-    <p class="text-rpg-muted mb-8">
-      Aún no tienes un personaje. Dale un nombre y comienza tu leyenda.
-    </p>
-    <div class="rpg-card">
-      <form [formGroup]="createForm" (ngSubmit)="createCharacter()">
-        <label class="rpg-label" for="charName">Nombre del personaje</label>
-        <input
-          id="charName"
-          class="rpg-input mb-4"
-          formControlName="nombre"
-          placeholder="Ej: Aldric el Valiente"
-        />
-        <button
-          type="submit"
-          class="btn-primary w-full"
-          [disabled]="creating()"
-        >
-          @if (creating()) {
-          <span
-            class="inline-block w-4 h-4 border-2 border-rpg-bg/40 border-t-rpg-bg rounded-full animate-spin mr-2"
-          ></span>
-          } Crear Personaje
-        </button>
-      </form>
-    </div>
-  </div>
-  } @else {
-  <!-- Character sheet -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Identity card -->
-    <div class="rpg-card flex flex-col items-center text-center gap-3">
-      <!-- Avatar placeholder -->
-      <div
-        class="w-24 h-24 rounded-full bg-rpg-border flex items-center justify-center text-4xl font-rpg text-rpg-gold border-2 border-rpg-gold/50"
-      >
-        {{ character()!.nombre.charAt(0) }}
-      </div>
-      <div>
-        <h2 class="font-rpg text-2xl text-rpg-text">
-          {{ character()!.nombre }}
-        </h2>
-        <span class="badge-gold mt-1">{{ character()!.etiqueta }}</span>
-      </div>
-      <div class="text-rpg-muted text-sm">Nivel {{ character()!.nivel }}</div>
 
-      <!-- XP bar -->
-      <div class="w-full">
-        <div class="flex justify-between text-xs text-rpg-muted mb-1">
-          <span>XP</span>
-          <span>
-            {{ character()!.experiencia }} / {{
-            character()!.experienciaParaSiguienteNivel }}
-          </span>
+    <div class="max-w-4xl mx-auto">
+      
+      @if (loading()) {
+        <div class="rpg-card animate-pulse space-y-4">
+          <div class="h-8 bg-rpg-border/40 w-1/3 rounded"></div>
+          <div class="h-32 bg-rpg-border/40 rounded"></div>
         </div>
-        <div class="w-full bg-rpg-border rounded-full h-2">
-          <div
-            class="bg-rpg-gold rounded-full h-2 transition-all"
-            [style.width.%]="xpPercent()"
-          ></div>
+      } @else if (!personaje()) {
+        <div class="rpg-card max-w-md mx-auto mt-10 text-center">
+          <h2 class="text-2xl font-rpg text-rpg-gold mb-2">Crea tu Leyenda</h2>
+          <p class="text-rpg-muted text-sm mb-6">Parece que aún no tienes un personaje registrado en este mundo.</p>
+          
+          <form [formGroup]="form" (ngSubmit)="crearPersonaje()" class="space-y-4 text-left">
+            <div>
+              <label class="rpg-label">Nombre del Personaje</label>
+              <input class="rpg-input" formControlName="nombreUsuario" placeholder="Ej. Apolo" />
+            </div>
+            <button type="submit" class="btn-primary w-full" [disabled]="saving()">
+              @if (saving()) {
+                <span class="inline-block w-4 h-4 border-2 border-rpg-bg/40 border-t-rpg-bg rounded-full animate-spin mr-2"></span>
+              }
+              Despertar en el mundo
+            </button>
+          </form>
         </div>
-      </div>
+      } @else {
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <div class="rpg-card col-span-1 text-center flex flex-col items-center justify-center relative overflow-hidden">
+            <div class="absolute top-0 w-full h-2 bg-gradient-to-r from-transparent via-rpg-gold to-transparent"></div>
+            
+            <div class="w-32 h-32 rounded-full border-4 border-rpg-border overflow-hidden mb-4 bg-rpg-bg flex items-center justify-center">
+              <span class="text-5xl">👤</span>
+            </div>
+            
+            <h2 class="text-3xl font-rpg text-rpg-gold mb-1">{{ personaje()?.nombreUsuario }}</h2>
+            <span class="px-3 py-1 bg-rpg-gold/20 text-rpg-gold text-xs font-semibold rounded-full uppercase tracking-wider mb-4">
+              {{ personaje()?.etiqueta || 'Sin Etiqueta' }}
+            </span>
+          </div>
 
-      <!-- Gold -->
-      <div class="flex items-center gap-2 text-rpg-gold font-medium">
-        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <circle cx="10" cy="10" r="8" />
-        </svg>
-        {{ character()!.oro }} oro
-      </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="lg:col-span-2 rpg-card">
-      <h3
-        class="font-rpg text-lg text-rpg-text mb-4 border-b border-rpg-border pb-2"
-      >
-        Estadísticas
-      </h3>
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        @for (stat of statEntries(); track stat.label) {
-        <div
-          class="bg-rpg-bg rounded-lg p-4 text-center border border-rpg-border/50"
-        >
-          <p class="text-rpg-muted text-xs uppercase tracking-wider mb-1">
-            {{ stat.label }}
-          </p>
-          <p class="font-rpg text-2xl text-rpg-gold">{{ stat.value }}</p>
+          <div class="rpg-card col-span-1 md:col-span-2">
+            <h3 class="font-rpg text-xl text-rpg-text mb-4 border-b border-rpg-border pb-2">Estadísticas de Combate</h3>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div class="bg-rpg-bg p-4 rounded-lg border border-rpg-border/50 text-center">
+                <div class="text-rpg-danger text-2xl mb-1">❤️</div>
+                <div class="text-2xl font-bold text-rpg-text">{{ personaje()?.salud ?? 0 }}</div>
+                <div class="text-xs text-rpg-muted uppercase tracking-wide">Salud</div>
+              </div>
+              
+              <div class="bg-rpg-bg p-4 rounded-lg border border-rpg-border/50 text-center">
+                <div class="text-orange-500 text-2xl mb-1">⚔️</div>
+                <div class="text-2xl font-bold text-rpg-text">{{ personaje()?.fuerza ?? 0 }}</div>
+                <div class="text-xs text-rpg-muted uppercase tracking-wide">Fuerza</div>
+              </div>
+              
+              <div class="bg-rpg-bg p-4 rounded-lg border border-rpg-border/50 text-center">
+                <div class="text-yellow-500 text-2xl mb-1">⚡</div>
+                <div class="text-2xl font-bold text-rpg-text">{{ personaje()?.energia ?? 0 }}</div>
+                <div class="text-xs text-rpg-muted uppercase tracking-wide">Energía</div>
+              </div>
+              
+              <div class="bg-rpg-bg p-4 rounded-lg border border-rpg-border/50 text-center">
+                <div class="text-purple-500 text-2xl mb-1">🔮</div>
+                <div class="text-2xl font-bold text-rpg-text">{{ personaje()?.magia ?? 0 }}</div>
+                <div class="text-xs text-rpg-muted uppercase tracking-wide">Magia</div>
+              </div>
+              
+              <div class="bg-rpg-bg p-4 rounded-lg border border-rpg-border/50 text-center">
+                <div class="text-blue-500 text-2xl mb-1">💧</div>
+                <div class="text-2xl font-bold text-rpg-text">{{ personaje()?.mana ?? 0 }}</div>
+                <div class="text-xs text-rpg-muted uppercase tracking-wide">Maná</div>
+              </div>
+            </div>
+          </div>
         </div>
-        }
-      </div>
+      }
     </div>
-  </div>
-  }
-</div>
+ 

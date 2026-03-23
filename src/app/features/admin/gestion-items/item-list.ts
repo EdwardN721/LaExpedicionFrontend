@@ -1,161 +1,123 @@
-import {
-  Component,
-  OnInit,
-  computed,
-  inject,
-  signal,
-} from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  FormArray,
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ItemService } from '../../../core/services/item.service';
 import { ToastService } from '../../../shared/services/toast.service';
-import { Item, PaginationMeta, StatModifier } from '../../../core/models/item.models';
+import { ItemDto, PaginationMeta } from '../../../core/models/item.models';
 
 @Component({
   selector: 'app-item-list',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: `./item-list.html`,
+  templateUrl: './item-list.html',
   styleUrl: './item-list.css'
 })
 export class ItemListComponent implements OnInit {
-  private readonly itemService = inject(ItemService);
+  private readonly svc = inject(ItemService);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
 
-  // ── State ────────────────────────────────────────────────────────────────
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly showModal = signal(false);
-  readonly editingItem = signal<Item | null>(null);
-  readonly items = signal<Item[]>([]);
+  readonly editing = signal<ItemDto | null>(null);
+  readonly items = signal<ItemDto[]>([]);
   readonly pagination = signal<PaginationMeta | null>(null);
   readonly currentPage = signal(1);
 
-  // ── Form ─────────────────────────────────────────────────────────────────
   readonly form = this.fb.group({
+    id: [''],
     nombre: ['', Validators.required],
     descripcion: [''],
-    tipo: ['', Validators.required],
-    durabilidadMaxima: [null as number | null],
-    precio: [0, [Validators.required, Validators.min(0)]],
-    modificadoresEstadisticas: this.fb.array([]),
+    // Controles para el modificador inicial
+    estadisticaAfectada: [0],
+    valorAjustado: [0]
   });
 
-  get modifiers(): FormArray {
-    return this.form.get('modificadoresEstadisticas') as FormArray;
-  }
+  ngOnInit(): void { this.load(); }
 
-  ngOnInit(): void {
-    this.loadItems();
-  }
-
-  loadItems(): void {
+  load(): void {
     this.loading.set(true);
-    this.itemService.getAll(this.currentPage(), 10).subscribe({
-      next: (result) => {
-        this.items.set(result.data);
-        this.pagination.set(result.pagination);
-        this.loading.set(false);
+    this.svc.getAll(this.currentPage(), 10).subscribe({
+      next: (r) => { 
+        this.items.set(r.data); 
+        this.pagination.set(r.pagination); 
+        this.loading.set(false); 
       },
-      error: () => {
-        this.toast.error('Error al cargar los items.');
-        this.loading.set(false);
+      error: () => { 
+        this.toast.error('Error cargando los items.'); 
+        this.loading.set(false); 
       },
     });
   }
 
-  changePage(page: number): void {
-    this.currentPage.set(page);
-    this.loadItems();
-  }
+  changePage(p: number): void { this.currentPage.set(p); this.load(); }
 
-  openModal(item?: Item): void {
-    this.editingItem.set(item ?? null);
-    this.modifiers.clear();
-
+  openModal(item?: ItemDto): void {
+    this.editing.set(item ?? null);
     if (item) {
-      this.form.patchValue({
-        nombre: item.nombre,
-        descripcion: item.descripcion,
-        tipo: item.tipo,
-        durabilidadMaxima: item.durabilidadMaxima,
-        precio: item.precio,
-      });
-      item.modificadoresEstadisticas.forEach((m) => this.addModifier(m));
+      this.form.patchValue({ id: item.id, nombre: item.nombre, descripcion: item.descripcion || '' });
     } else {
-      this.form.reset({ precio: 0 });
+      this.form.reset({ estadisticaAfectada: 0, valorAjustado: 0 });
     }
-
     this.showModal.set(true);
   }
 
-  closeModal(): void {
-    this.showModal.set(false);
-    this.editingItem.set(null);
-  }
-
-  addModifier(mod?: StatModifier): void {
-    this.modifiers.push(
-      this.fb.group({
-        stat: [mod?.stat ?? '', Validators.required],
-        value: [mod?.value ?? 0, Validators.required],
-      })
-    );
-  }
-
-  removeModifier(index: number): void {
-    this.modifiers.removeAt(index);
-  }
+  closeModal(): void { this.showModal.set(false); }
 
   save(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
-
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    
     this.saving.set(true);
-    const dto = this.form.getRawValue() as any;
-    const editing = this.editingItem();
+    const formValue = this.form.getRawValue();
+    const e = this.editing();
 
-    const req = editing
-      ? this.itemService.update(editing.id, dto)
-      : this.itemService.create(dto);
+    if (e) {
+      // Actualizar: solo requiere id, nombre y descripción
+      const updateDto = { id: e.id, nombre: formValue.nombre, descripcion: formValue.descripcion };
+      this.svc.update(e.id, updateDto as any).subscribe({
+        next: () => this.handleSuccess('Item actualizado.'),
+        error: () => this.handleError()
+      });
+    } else {
+      // Crear: armamos el array de modificadores si seleccionó uno válido
+      const modificadores = formValue.estadisticaAfectada && formValue.estadisticaAfectada > 0 
+        ? [{ 
+            estadisticaAfectada: Number(formValue.estadisticaAfectada), 
+            valorAjustado: Number(formValue.valorAjustado) 
+          }] 
+        : [];
 
-    req.subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.toast.success(
-          editing ? 'Item actualizado correctamente.' : 'Item creado correctamente.'
-        );
-        this.closeModal();
-        this.loadItems();
-      },
-      error: () => {
-        this.saving.set(false);
-        this.toast.error('Error al guardar el item.');
-      },
+      const createDto = { 
+        nombre: formValue.nombre, 
+        descripcion: formValue.descripcion, 
+        modificadores 
+      };
+
+      this.svc.create(createDto as any).subscribe({
+        next: () => this.handleSuccess('Item forjado exitosamente.'),
+        error: () => this.handleError()
+      });
+    }
+  }
+
+  delete(item: ItemDto): void {
+    if (!confirm(`¿Eliminar permanentemente el item "${item.nombre}"?`)) return;
+    this.svc.delete(item.id).subscribe({
+      next: () => { this.toast.success('Item destruido.'); this.load(); },
+      error: () => this.toast.error('Error al destruir el item.'),
     });
   }
 
-  deleteItem(item: Item): void {
-    if (!confirm(`¿Eliminar "${item.nombre}"? Esta acción no se puede deshacer.`)) return;
-
-    this.itemService.delete(item.id).subscribe({
-      next: () => {
-        this.toast.success(`"${item.nombre}" eliminado.`);
-        this.loadItems();
-      },
-      error: () => this.toast.error('Error al eliminar el item.'),
-    });
+  private handleSuccess(msg: string) {
+    this.saving.set(false);
+    this.toast.success(msg);
+    this.closeModal();
+    this.load();
   }
 
-  formatMods(mods: StatModifier[]): string {
-    return mods.map((m) => `${m.stat} +${m.value}`).join(', ');
+  private handleError() {
+    this.saving.set(false);
+    this.toast.error('Error al forjar o actualizar el item.');
   }
 }

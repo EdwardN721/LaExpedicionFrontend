@@ -1,33 +1,28 @@
 <div>
-  <!-- Header -->
   <div class="flex items-center justify-between mb-6">
     <div>
       <h2 class="font-rpg text-2xl text-rpg-text">Gestión de Items</h2>
       <p class="text-rpg-muted text-sm mt-0.5">
-        {{ pagination()?.totalCount ?? 0 }} items en total
+        {{ pagination()?.totalCount ?? 0 }} items en el mundo
       </p>
     </div>
     <button class="btn-primary" (click)="openModal()">+ Nuevo Item</button>
   </div>
 
-  <!-- Table skeleton -->
   @if (loading()) {
   <div class="rpg-card animate-pulse space-y-3">
-    @for (i of [1,2,3,4,5]; track i) {
-    <div class="h-10 bg-rpg-border/40 rounded"></div>
+    @for (i of [1,2,3]; track i) {
+    <div class="h-12 bg-rpg-border/40 rounded"></div>
     }
   </div>
   } @else {
-  <!-- Table -->
   <div class="rpg-card overflow-x-auto p-0">
     <table class="rpg-table">
       <thead>
         <tr>
           <th>Nombre</th>
-          <th>Tipo</th>
-          <th>Durabilidad</th>
-          <th>Precio</th>
-          <th>Modificadores</th>
+          <th>Descripción</th>
+          <th>Modificador Principal</th>
           <th class="text-right">Acciones</th>
         </tr>
       </thead>
@@ -35,24 +30,16 @@
         @for (item of items(); track item.id) {
         <tr>
           <td class="font-medium text-rpg-text">{{ item.nombre }}</td>
-          <td>
-            <span class="badge-gold">{{ item.tipo }}</span>
+          <td class="text-rpg-muted truncate max-w-xs">
+            {{ item.descripcion || 'Sin descripción' }}
           </td>
           <td>
-            @if (item.durabilidadMaxima) {
-            <span>{{ item.usosRestantes }} / {{ item.durabilidadMaxima }}</span>
-            } @else {
-            <span class="text-rpg-muted">—</span>
-            }
-          </td>
-          <td class="text-rpg-gold">{{ item.precio }} oro</td>
-          <td>
-            @if (item.modificadoresEstadisticas.length) {
-            <span class="text-rpg-muted text-xs">
-              {{ formatMods(item.modificadoresEstadisticas) }}
+            @if(item.estadisticaAfectada && item.valorAjuste) {
+            <span class="badge-success">
+              {{ item.estadisticaAfectada }} (+{{ item.valorAjuste }})
             </span>
             } @else {
-            <span class="text-rpg-muted">—</span>
+            <span class="text-rpg-muted text-xs italic">Ninguno</span>
             }
           </td>
           <td class="text-right space-x-2">
@@ -64,7 +51,7 @@
             </button>
             <button
               class="text-rpg-danger hover:underline text-sm"
-              (click)="deleteItem(item)"
+              (click)="delete(item)"
             >
               Eliminar
             </button>
@@ -72,8 +59,8 @@
         </tr>
         } @empty {
         <tr>
-          <td colspan="6" class="text-center text-rpg-muted py-10">
-            No hay items registrados.
+          <td colspan="4" class="text-center text-rpg-muted py-10">
+            La forja está vacía. No hay items registrados.
           </td>
         </tr>
         }
@@ -81,10 +68,9 @@
     </table>
   </div>
 
-  <!-- Pagination -->
   @if (pagination(); as pg) {
   <div class="flex items-center justify-between mt-4 text-sm text-rpg-muted">
-    <span> Página {{ pg.currentPage }} de {{ pg.totalPages }} </span>
+    <span>Página {{ pg.currentPage }} de {{ pg.totalPages }}</span>
     <div class="flex gap-2">
       <button
         class="btn-secondary py-1.5 px-3 text-xs"
@@ -105,116 +91,72 @@
   } }
 </div>
 
-<!-- ── Modal ──────────────────────────────────────────────────────────── -->
 @if (showModal()) {
 <div
   class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
   (click)="closeModal()"
 >
-  <div
-    class="rpg-card w-full max-w-lg max-h-[90vh] overflow-y-auto"
-    (click)="$event.stopPropagation()"
-  >
+  <div class="rpg-card w-full max-w-lg" (click)="$event.stopPropagation()">
     <h3 class="font-rpg text-xl text-rpg-text mb-5">
-      {{ editingItem() ? 'Editar Item' : 'Nuevo Item' }}
+      {{ editing() ? 'Editar Item' : 'Forjar Nuevo Item' }}
     </h3>
 
-    <form [formGroup]="form" (ngSubmit)="save()" novalidate class="space-y-4">
-      <!-- Nombre -->
+    <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
       <div>
         <label class="rpg-label">Nombre</label>
-        <input
-          class="rpg-input"
-          formControlName="nombre"
-          placeholder="Espada de Fuego"
-        />
+        <input class="rpg-input" formControlName="nombre" />
       </div>
-
-      <!-- Descripción -->
       <div>
         <label class="rpg-label">Descripción</label>
         <textarea
           class="rpg-input resize-none"
-          rows="2"
+          rows="3"
           formControlName="descripcion"
         ></textarea>
       </div>
 
-      <!-- Tipo + Durabilidad + Precio -->
-      <div class="grid grid-cols-3 gap-3">
-        <div>
-          <label class="rpg-label">Tipo</label>
-          <input class="rpg-input" formControlName="tipo" placeholder="Arma" />
-        </div>
-        <div>
-          <label class="rpg-label">Durabilidad máx.</label>
-          <input
-            class="rpg-input"
-            type="number"
-            formControlName="durabilidadMaxima"
-          />
-        </div>
-        <div>
-          <label class="rpg-label">Precio (oro)</label>
-          <input class="rpg-input" type="number" formControlName="precio" />
-        </div>
-      </div>
-
-      <!-- Stat modifiers (dynamic) -->
-      <div>
-        <div class="flex items-center justify-between mb-2">
-          <label class="rpg-label mb-0">Modificadores de estadísticas</label>
-          <button
-            type="button"
-            class="text-rpg-gold text-xs hover:underline"
-            (click)="addModifier()"
-          >
-            + Añadir
-          </button>
-        </div>
-
-        <div formArrayName="modificadoresEstadisticas" class="space-y-2">
-          @for (mod of modifiers.controls; track $index) {
-          <div [formGroupName]="$index" class="flex gap-2 items-center">
-            <input
-              class="rpg-input"
-              formControlName="stat"
-              placeholder="Estadística (ej. Fuerza)"
-            />
-            <input
-              class="rpg-input w-28"
-              type="number"
-              formControlName="value"
-              placeholder="Valor"
-            />
-            <button
-              type="button"
-              class="text-rpg-danger hover:text-rpg-danger/70 transition shrink-0"
-              (click)="removeModifier($index)"
-              title="Eliminar"
+      @if (!editing()) {
+      <div class="p-3 border border-rpg-border rounded-lg bg-rpg-bg/50">
+        <label class="rpg-label text-rpg-gold"
+          >Modificador Inicial (Opcional)</label
+        >
+        <div class="grid grid-cols-2 gap-3 mt-2">
+          <div>
+            <label class="text-xs text-rpg-muted">Estadística</label>
+            <select
+              class="rpg-input text-sm"
+              formControlName="estadisticaAfectada"
             >
-              ✕
-            </button>
+              <option [value]="0">Ninguna</option>
+              <option [value]="1">Salud</option>
+              <option [value]="2">Fuerza</option>
+              <option [value]="4">Energía</option>
+              <option [value]="5">Magia</option>
+              <option [value]="6">Maná</option>
+            </select>
           </div>
-          }
+          <div>
+            <label class="text-xs text-rpg-muted">Valor</label>
+            <input
+              class="rpg-input text-sm"
+              type="number"
+              formControlName="valorAjustado"
+            />
+          </div>
         </div>
       </div>
+      }
 
-      <!-- Actions -->
-      <div class="flex justify-end gap-3 pt-2 border-t border-rpg-border">
+      <div class="flex justify-end gap-3 pt-4 border-t border-rpg-border mt-6">
         <button type="button" class="btn-secondary" (click)="closeModal()">
           Cancelar
         </button>
-        <button
-          type="submit"
-          class="btn-primary flex items-center gap-2"
-          [disabled]="saving()"
-        >
+        <button type="submit" class="btn-primary" [disabled]="saving()">
           @if (saving()) {
           <span
-            class="inline-block w-4 h-4 border-2 border-rpg-bg/40 border-t-rpg-bg rounded-full animate-spin"
+            class="inline-block w-4 h-4 border-2 border-rpg-bg/40 border-t-rpg-bg rounded-full animate-spin mr-2"
           ></span>
-          } {{ editingItem() ? 'Guardar cambios' : 'Crear Item' }}
+          } {{ editing() ? 'Guardar Cambios' : 'Forjar' }}
         </button>
       </div>
     </form>

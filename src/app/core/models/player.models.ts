@@ -1,44 +1,63 @@
-export interface CharacterStats {
-  fuerza: number;
-  magia: number;
-  defensa: number;
-  agilidad: number;
+// src/app/core/models/player.models.ts
+
+// ─── Personaje ────────────────────────────────────────────────────────
+export interface PersonajeDto {
+  id: string; // Guid
+  nombreUsuario: string;
+  etiqueta?: string | null;
+  fuerza?: number | null;
+  energia?: number | null;
+  magia?: number | null;
+  mana?: number | null;
+  salud?: number | null;
+}
+
+export interface CrearPersonajeDto {
+  usuarioId: string; // Guid del usuario logueado
+  nombreUsuario: string;
+}
+
+export interface ActualizarPersonajeDto {
+  id: string;
+  nombreUsuario: string;
+  etiquetaId: string; // Guid de la etiqueta elegida
+}
+
+// ─── Estadísticas y Etiquetas ──────────────────────────────────────────
+export interface EstadisticaDto {
+  id: string;
+  personajeId: string;
   salud: number;
+  fuerza: number;
+  energia: number;
+  magia: number;
+  mana: number;
 }
 
-export interface Character {
-  id: number;
+export interface EtiquetaDto {
+  id: string;
   nombre: string;
-  nivel: number;
-  experiencia: number;
-  experienciaParaSiguienteNivel: number;
-  oro: number;
-  etiqueta: string; // e.g. "Novato", "Aventurero", "Héroe"
-  estadisticas: CharacterStats;
+  descripcion?: string | null;
 }
 
-export interface CreateCharacterDto {
-  nombre: string;
-}
-
-// ── Inventory ──
-export interface InventoryItem {
-  id: number;
-  itemId: number;
-  nombre: string;
-  tipo: string;
-  usosRestantes: number | null;
-  durabilidadMaxima: number | null;
+// ─── Inventario ────────────────────────────────────────────────────────
+export interface InventarioDto {
+  id: string; // Agregado lógicamente para el update en frontend
+  nombrePersonaje?: string | null;
+  nombreItem?: string | null;
   equipado: boolean;
+  usosRestantes: number;
 }
 
-// ── Adventure history ──
-export interface AdventureRecord {
-  id: number;
-  expedicionNombre: string;
-  fecha: string;
-  exito: boolean;
-  oroDobtenido: number;
-  experienciaObtenida: number;
-  descripcionResultado: string;
+export interface CrearInventarioDto {
+  personajeId: string;
+  itemId: string;
+  equipado: boolean;
+  usosRestantes: number;
+}
+
+export interface ActualizarInventarioDto {
+  id: string;
+  equipado: boolean;
+  usosRestantes: number;
 }

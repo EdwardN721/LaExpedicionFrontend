@@ -19,37 +19,36 @@ export class LoginComponent {
   private readonly toast = inject(ToastService);
 
   readonly loading = signal(false);
-  readonly errorMsg = signal<string | null>(null);
 
   readonly form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],
   });
 
-  onSubmit(): void {
+  onSubmit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
     this.loading.set(true);
-    this.errorMsg.set(null);
-
-    const { email, password } = this.form.getRawValue();
-
-    this.auth.login({ email: email!, password: password! }).subscribe({
-      next: (res) => {
-        this.loading.set(false);
-        this.toast.success(`Bienvenido de vuelta, ${res.userName}!`);
-        const dest = res.role === 'Admin' ? '/admin' : '/play';
-        this.router.navigate([dest]);
+    
+    this.auth.login(this.form.getRawValue() as any).subscribe({
+      next: () => {
+        this.toast.success('Bienvenido de vuelta.');
+        // Aquí podrías leer el rol del usuario (Admin vs User) para redirigir
+        const role = this.auth.userRole();
+        if (role === 'Admin') {
+          this.router.navigate(['/admin']);
+        } else {
+          this.router.navigate(['/play']);
+        }
       },
       error: (err) => {
         this.loading.set(false);
-        this.errorMsg.set(
-          err?.error?.message ?? 'Credenciales incorrectas. Inténtalo de nuevo.'
-        );
-      },
+        this.toast.error('Credenciales incorrectas.');
+        console.error(err);
+      }
     });
   }
 }

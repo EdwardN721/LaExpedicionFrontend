@@ -1,29 +1,15 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  AbstractControl,
-  FormBuilder,
-  ReactiveFormsModule,
-  ValidationErrors,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../shared/services/toast.service';
-
-function passwordMatchValidator(
-  control: AbstractControl
-): ValidationErrors | null {
-  const pw = control.get('password')?.value;
-  const confirm = control.get('confirmPassword')?.value;
-  return pw && confirm && pw !== confirm ? { passwordMismatch: true } : null;
-}
 
 @Component({
   selector: 'app-register',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
-  templateUrl: `./register.html`,
+  templateUrl: './register.html',
   styleUrl: './register.css'
 })
 export class RegisterComponent {
@@ -33,50 +19,35 @@ export class RegisterComponent {
   private readonly toast = inject(ToastService);
 
   readonly loading = signal(false);
-  readonly errorMsg = signal<string | null>(null);
 
-  readonly form = this.fb.group(
-    {
-      userName: ['', [Validators.required, Validators.minLength(3)]],
-      email: ['', [Validators.required, Validators.email]],
-      password: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(6),
-          Validators.pattern(/^(?=.*[A-Z])(?=.*\d).+$/),
-        ],
-      ],
-      confirmPassword: ['', Validators.required],
-    },
-    { validators: passwordMatchValidator }
-  );
+  readonly form = this.fb.group({
+    nombre: ['', Validators.required],
+    primerApellido: ['', Validators.required],
+    segundoApellido: [''],
+    correo: ['', [Validators.required, Validators.email]],
+    telefono: ['', Validators.required],
+    password: ['', [Validators.required, Validators.minLength(6)]],
+  });
 
-  onSubmit(): void {
+  onSubmit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
     this.loading.set(true);
-    this.errorMsg.set(null);
+    const dto = this.form.getRawValue();
 
-    const { userName, email, password } = this.form.getRawValue();
-
-    this.auth
-      .register({ userName: userName!, email: email!, password: password! })
-      .subscribe({
-        next: (res) => {
-          this.loading.set(false);
-          this.toast.success(`Bienvenido, ${res.userName}! Tu aventura comienza.`);
-          this.router.navigate(['/play']);
-        },
-        error: (err) => {
-          this.loading.set(false);
-          this.errorMsg.set(
-            err?.error?.message ?? 'No se pudo crear la cuenta. Inténtalo de nuevo.'
-          );
-        },
-      });
+    this.auth.register(dto as any).subscribe({
+      next: () => {
+      this.toast.success('¡Registro exitoso! Por favor inicia sesión.');
+      this.router.navigate(['/login']); // Lo mandamos al login
+    },
+      error: (err) => {
+        this.loading.set(false);
+        this.toast.error('Error al registrarse. Intenta con otro correo.');
+        console.error(err);
+      }
+    });
   }
 }

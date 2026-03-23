@@ -1,42 +1,46 @@
+// src/app/core/services/expedition.service.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import {
-  CreateExpeditionDto,
-  Expedition,
-} from '../models/expedition.models';
-import { PagedResult } from './item.service';
+import { ExpedicionDto, CrearExpedicionDto, ActualizarExpedicionDto, PaginatedResponse, PaginationMeta } from '../models/expedition.models';
 
 @Injectable({ providedIn: 'root' })
 export class ExpeditionService {
   private readonly http = inject(HttpClient);
-  private readonly base = `${environment.apiUrl}/api/expediciones`;
+  private readonly apiUrl = `${environment.apiUrl}/api/Expedicion`; // Ajusta el endpoint según tu controlador en .NET
 
-  getAll(page = 1, pageSize = 10): Observable<PagedResult<Expedition>> {
-    const params = new HttpParams()
-      .set('pageNumber', page)
-      .set('pageSize', pageSize);
-
-    return this.http
-      .get<Expedition[]>(this.base, { params, observe: 'response' })
+  getAll(page: number, limit: number): Observable<PaginatedResponse<ExpedicionDto>> {
+    let params = new HttpParams().set('PageNumber', page).set('PageSize', limit);
+    // observe: 'response' nos trae toda la respuesta HTTP, incluyendo los Headers
+    return this.http.get<ExpedicionDto[]>(this.apiUrl, { params, observe: 'response' })
       .pipe(
-        map((res: HttpResponse<Expedition[]>) => ({
-          data: res.body ?? [],
-          pagination: JSON.parse(res.headers.get('X-Pagination') ?? '{}'),
-        }))
+        map((response: HttpResponse<ExpedicionDto[]>) => {
+          // Extraemos el header X-Pagination
+          const paginationHeader = response.headers.get('X-Pagination');
+          const pagination: PaginationMeta = paginationHeader ? JSON.parse(paginationHeader) : null;
+          
+          return {
+            data: response.body || [],
+            pagination: pagination
+          };
+        })
       );
   }
 
-  create(dto: CreateExpeditionDto): Observable<Expedition> {
-    return this.http.post<Expedition>(this.base, dto);
+  getById(id: string): Observable<ExpedicionDto> {
+    return this.http.get<ExpedicionDto>(`${this.apiUrl}/${id}`);
   }
 
-  update(id: number, dto: Partial<CreateExpeditionDto>): Observable<Expedition> {
-    return this.http.put<Expedition>(`${this.base}/${id}`, dto);
+  create(dto: CrearExpedicionDto): Observable<ExpedicionDto> {
+    return this.http.post<ExpedicionDto>(this.apiUrl, dto);
   }
 
-  delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${id}`);
+  update(id: string, dto: ActualizarExpedicionDto): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}`, dto);
+  }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

@@ -3,12 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ExpeditionService } from '../../../core/services/expedition.service';
 import { ToastService } from '../../../shared/services/toast.service';
-import {
-  Expedition
-} from '../../../core/models/expedition.models';
-import { PaginationMeta as PM } from '../../../core/models/item.models';
-
-const DIFICULTADES = ['Facil', 'Normal', 'Dificil', 'Legendario'];
+import { ExpedicionDto, PaginationMeta } from '../../../core/models/expedition.models';
 
 @Component({
   selector: 'app-expedition-list',
@@ -22,23 +17,21 @@ export class ExpeditionListComponent implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
 
-  readonly dificultades = DIFICULTADES;
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly showModal = signal(false);
-  readonly editing = signal<Expedition | null>(null);
-  readonly expeditions = signal<Expedition[]>([]);
-  readonly pagination = signal<PM | null>(null);
+  readonly editing = signal<ExpedicionDto | null>(null);
+  readonly expeditions = signal<ExpedicionDto[]>([]);
+  readonly pagination = signal<PaginationMeta | null>(null);
   readonly currentPage = signal(1);
 
+  // Formulario ajustado a los nuevos DTOs
   readonly form = this.fb.group({
+    id: [''], // Guardamos el Guid de forma oculta para el update
     nombre: ['', Validators.required],
     descripcion: [''],
-    nivelRecomendado: [1, [Validators.required, Validators.min(1)]],
-    duracionHoras: [1, [Validators.required, Validators.min(1)]],
-    recompensaOro: [0, Validators.required],
-    recompensaExperiencia: [0, Validators.required],
-    dificultad: ['Normal', Validators.required],
+    dinero: [0, [Validators.required, Validators.min(0)]],
+    experiencia: [0, [Validators.required, Validators.min(0)]]
   });
 
   ngOnInit(): void { this.load(); }
@@ -46,16 +39,27 @@ export class ExpeditionListComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.svc.getAll(this.currentPage(), 10).subscribe({
-      next: (r) => { this.expeditions.set(r.data); this.pagination.set(r.pagination); this.loading.set(false); },
-      error: () => { this.toast.error('Error cargando expediciones.'); this.loading.set(false); },
+      next: (r) => { 
+        this.expeditions.set(r.data); 
+        this.pagination.set(r.pagination); 
+        this.loading.set(false); 
+      },
+      error: () => { 
+        this.toast.error('Error cargando expediciones.'); 
+        this.loading.set(false); 
+      },
     });
   }
 
   changePage(p: number): void { this.currentPage.set(p); this.load(); }
 
-  openModal(exp?: Expedition): void {
+  openModal(exp?: ExpedicionDto): void {
     this.editing.set(exp ?? null);
-    exp ? this.form.patchValue(exp as any) : this.form.reset({ nivelRecomendado: 1, duracionHoras: 1, recompensaOro: 0, recompensaExperiencia: 0, dificultad: 'Normal' });
+    if (exp) {
+      this.form.patchValue(exp);
+    } else {
+      this.form.reset({ dinero: 0, experiencia: 0 });
+    }
     this.showModal.set(true);
   }
 
@@ -63,29 +67,45 @@ export class ExpeditionListComponent implements OnInit {
 
   save(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    
     this.saving.set(true);
-    const dto = this.form.getRawValue() as any;
+    const formValue = this.form.getRawValue();
     const e = this.editing();
-    const req = e ? this.svc.update(e.id, dto) : this.svc.create(dto);
-    req.subscribe({
-      next: () => { this.saving.set(false); this.toast.success(e ? 'Actualizado.' : 'Creado.'); this.closeModal(); this.load(); },
-      error: () => { this.saving.set(false); this.toast.error('Error al guardar.'); },
-    });
+
+    if (e) {
+      // Actualizar (Mapeamos al DTO de actualización que requiere el ID)
+      const updateDto = { ...formValue, id: e.id } as any; 
+      this.svc.update(e.id, updateDto).subscribe({
+        next: () => { this.handleSuccess('Expedición actualizada.'); },
+        error: () => { this.handleError(); }
+      });
+    } else {
+      // Crear (Eliminamos el ID del form porque es un CrearExpedicionDto)
+      const { id, ...createDto } = formValue;
+      this.svc.create(createDto as any).subscribe({
+        next: () => { this.handleSuccess('Expedición creada.'); },
+        error: () => { this.handleError(); }
+      });
+    }
   }
 
-  delete(exp: Expedition): void {
-    if (!confirm(`¿Eliminar "${exp.nombre}"?`)) return;
+  delete(exp: ExpedicionDto): void {
+    if (!confirm(`¿Eliminar la expedición "${exp.nombre}"?`)) return;
     this.svc.delete(exp.id).subscribe({
       next: () => { this.toast.success('Expedición eliminada.'); this.load(); },
       error: () => this.toast.error('Error al eliminar.'),
     });
   }
 
-  diffBadge(d: string): string {
-    const map: Record<string, string> = {
-      Facil: 'badge-success', Normal: 'badge-gold',
-      Dificil: 'badge-danger', Legendario: 'bg-purple-900/40 text-purple-300 px-2.5 py-0.5 rounded-full text-xs font-medium inline-flex',
-    };
-    return map[d] ?? 'badge-gold';
+  private handleSuccess(msg: string) {
+    this.saving.set(false);
+    this.toast.success(msg);
+    this.closeModal();
+    this.load();
+  }
+
+  private handleError() {
+    this.saving.set(false);
+    this.toast.error('Error al guardar la expedición.');
   }
 }

@@ -1,37 +1,50 @@
-// ─── Item models ─────────────────────────────────────────────────────────────
+// src/app/core/models/item.models.ts
 
-export interface StatModifier {
-  stat: string;      // e.g. "Fuerza", "Magia", "Salud"
-  value: number;
-}
-
-export interface Item {
-  id: number;
+// Usamos string para mapear los Guid de C#
+export interface ItemDto {
+  id: string;
   nombre: string;
-  descripcion: string;
-  tipo: string;
-  usosRestantes: number | null;
-  durabilidadMaxima: number | null;
-  precio: number;
-  modificadoresEstadisticas: StatModifier[];
+  descripcion?: string | null;
+  estadisticaAfectada?: string | null;
+  valorAjuste?: number | null;
 }
 
-export interface CreateItemDto {
+export interface ItemModificadorDto {
+  id: string;
+  itemId: string;
+  estadisticaAfectada: string;
+  valorAjuste: number;
+}
+
+export interface CrearItemModificadorDto {
+  // EnumEstadistica en C# (0=Ninguna, 1=Salud, 2=Fuerza, etc.)
+  // Lo enviamos como número
+  estadisticaAfectada: number; 
+  valorAjustado: number;
+}
+
+export interface CrearItemDto {
   nombre: string;
-  descripcion: string;
-  tipo: string;
-  durabilidadMaxima: number | null;
-  precio: number;
-  modificadoresEstadisticas: StatModifier[];
+  descripcion?: string | null;
+  modificadores?: CrearItemModificadorDto[] | null;
 }
 
-// ─── Pagination metadata ──────────────────────────────────────────────────────
+export interface ActualizarItemDto {
+  id: string;
+  nombre: string;
+  descripcion: string; // En tu backend no es nullable al actualizar
+}
 
+// Reutilizamos la paginación
 export interface PaginationMeta {
   currentPage: number;
   totalPages: number;
-  pageSize: number;
   totalCount: number;
   hasPrevious: boolean;
   hasNext: boolean;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: PaginationMeta;
 }

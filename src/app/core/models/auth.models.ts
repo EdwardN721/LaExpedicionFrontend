@@ -1,4 +1,4 @@
-// ─── Models ─────────────────────────────────────────────────────────────────
+// src/app/core/models/auth.models.ts
 
 export interface LoginRequest {
   email: string;
@@ -6,23 +6,23 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-  userName: string;
-  email: string;
+  nombre: string;
+  primerApellido: string;
+  segundoApellido?: string | null;
+  correo: string; // Fíjate que en tu DTO se llama Correo, no Email
   password: string;
+  telefono: string;
 }
 
 export interface AuthResponse {
   token: string;
-  expiration: string;
-  role: string;
-  userName: string;
-  userId: string;
 }
 
 export interface TokenPayload {
-  sub: string;
-  email: string;
-  role: string;
-  unique_name: string;
+  sub?: string;
+  email?: string;
+  unique_name?: string;
+  role?: string;
   exp: number;
+  [key: string]: any;
 }
