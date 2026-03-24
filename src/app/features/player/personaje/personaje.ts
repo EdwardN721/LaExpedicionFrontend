@@ -33,7 +33,10 @@ export class PersonajeComponent implements OnInit {
   }
 
   cargarPersonaje(): void {
-    const usuarioId = this.authSvc.currentUser()?.sub; // Extraemos el ID del token JWT
+    // Leemos el usuario completo
+    const user: any = this.authSvc.currentUser();
+    // En .NET, el claim del ID viaja como 'nameid', no como 'sub'
+    const usuarioId = user?.nameid || user?.sub; 
     
     if (!usuarioId) {
       this.loading.set(false);
@@ -41,12 +44,12 @@ export class PersonajeComponent implements OnInit {
     }
 
     this.playerSvc.getPersonajeByUsuarioId(usuarioId).subscribe({
+      // ... (el resto del subscribe se queda exactamente igual)
       next: (personaje) => {
         this.personaje.set(personaje);
         this.loading.set(false);
       },
       error: (err) => {
-        // Si el backend devuelve 404, significa que aún no tiene personaje
         if (err.status === 404) {
           this.personaje.set(null);
         } else {
@@ -58,10 +61,19 @@ export class PersonajeComponent implements OnInit {
   }
 
   crearPersonaje(): void {
-    if (this.form.invalid) return;
+    // Si el formulario es inválido, forzamos a que se muestren los errores visuales
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
     
-    const usuarioId = this.authSvc.currentUser()?.sub;
-    if (!usuarioId) return;
+    const user: any = this.authSvc.currentUser();
+    const usuarioId = user?.nameid || user?.sub;
+    
+    if (!usuarioId) {
+      this.toast.error('Sesión corrupta. Vuelve a iniciar sesión.');
+      return;
+    }
 
     this.saving.set(true);
     const dto: CrearPersonajeDto = {

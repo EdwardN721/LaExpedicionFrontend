@@ -13,7 +13,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class ItemService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = `${environment.apiUrl}/api/items`;
+  private readonly apiUrl = `${environment.apiUrl}/api/Item`;
 
   getAll(page: number, limit: number): Observable<PaginatedResponse<ItemDto>> {
     let params = new HttpParams().set('page', page).set('limit', limit);
@@ -21,18 +21,18 @@ export class ItemService {
   }
 
   getById(id: string): Observable<ItemDto> {
-    return this.http.get<ItemDto>(`${this.apiUrl}/${id}`);
+    return this.http.get<ItemDto>(`${this.apiUrl}/Item/${id}`);
   }
 
   create(dto: CrearItemDto): Observable<ItemDto> {
-    return this.http.post<ItemDto>(this.apiUrl, dto);
+    return this.http.post<ItemDto>(`${this.apiUrl}/Item`, dto);
   }
 
   update(id: string, dto: ActualizarItemDto): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${id}`, dto);
+    return this.http.put<void>(`${this.apiUrl}/Item/${id}`, dto);
   }
 
   delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/Item/${id}`);
   }
 }

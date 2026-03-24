@@ -1,81 +1,134 @@
+<div class="max-w-4xl mx-auto">
+  @if (loading()) {
+  <div class="rpg-card animate-pulse space-y-4">
+    <div class="h-8 bg-rpg-border/40 w-1/3 rounded"></div>
+    <div class="h-32 bg-rpg-border/40 rounded"></div>
+  </div>
+  } @else if (!personaje()) {
+  <div class="rpg-card max-w-md mx-auto mt-10 text-center">
+    <h2 class="text-2xl font-rpg text-rpg-gold mb-2">Crea tu Leyenda</h2>
+    <p class="text-rpg-muted text-sm mb-6">
+      Parece que aún no tienes un personaje registrado en este mundo.
+    </p>
 
-    <div class="max-w-4xl mx-auto">
-      
-      @if (loading()) {
-        <div class="rpg-card animate-pulse space-y-4">
-          <div class="h-8 bg-rpg-border/40 w-1/3 rounded"></div>
-          <div class="h-32 bg-rpg-border/40 rounded"></div>
-        </div>
-      } @else if (!personaje()) {
-        <div class="rpg-card max-w-md mx-auto mt-10 text-center">
-          <h2 class="text-2xl font-rpg text-rpg-gold mb-2">Crea tu Leyenda</h2>
-          <p class="text-rpg-muted text-sm mb-6">Parece que aún no tienes un personaje registrado en este mundo.</p>
-          
-          <form [formGroup]="form" (ngSubmit)="crearPersonaje()" class="space-y-4 text-left">
-            <div>
-              <label class="rpg-label">Nombre del Personaje</label>
-              <input class="rpg-input" formControlName="nombreUsuario" placeholder="Ej. Apolo" />
-            </div>
-            <button type="submit" class="btn-primary w-full" [disabled]="saving()">
-              @if (saving()) {
-                <span class="inline-block w-4 h-4 border-2 border-rpg-bg/40 border-t-rpg-bg rounded-full animate-spin mr-2"></span>
-              }
-              Despertar en el mundo
-            </button>
-          </form>
-        </div>
-      } @else {
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          
-          <div class="rpg-card col-span-1 text-center flex flex-col items-center justify-center relative overflow-hidden">
-            <div class="absolute top-0 w-full h-2 bg-gradient-to-r from-transparent via-rpg-gold to-transparent"></div>
-            
-            <div class="w-32 h-32 rounded-full border-4 border-rpg-border overflow-hidden mb-4 bg-rpg-bg flex items-center justify-center">
-              <span class="text-5xl">👤</span>
-            </div>
-            
-            <h2 class="text-3xl font-rpg text-rpg-gold mb-1">{{ personaje()?.nombreUsuario }}</h2>
-            <span class="px-3 py-1 bg-rpg-gold/20 text-rpg-gold text-xs font-semibold rounded-full uppercase tracking-wider mb-4">
-              {{ personaje()?.etiqueta || 'Sin Etiqueta' }}
-            </span>
-          </div>
+    <form
+      [formGroup]="form"
+      (ngSubmit)="crearPersonaje()"
+      class="space-y-4 text-left"
+    >
+      <div>
+        <label class="rpg-label">Nombre del Personaje</label>
+        <input
+          class="rpg-input"
+          formControlName="nombreUsuario"
+          placeholder="Ej. Apolo"
+        />
+      </div>
+      <button
+        type="submit"
+        class="btn-primary w-full"
+        [disabled]="saving() || form.invalid"
+      >
+        @if (saving()) {
+        <span
+          class="inline-block w-4 h-4 border-2 border-rpg-bg/40 border-t-rpg-bg rounded-full animate-spin mr-2"
+        ></span>
+        } Despertar en el mundo
+      </button>
+    </form>
+  </div>
+  } @else {
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div
+      class="rpg-card col-span-1 text-center flex flex-col items-center justify-center relative overflow-hidden"
+    >
+      <div
+        class="absolute top-0 w-full h-2 bg-gradient-to-r from-transparent via-rpg-gold to-transparent"
+      ></div>
 
-          <div class="rpg-card col-span-1 md:col-span-2">
-            <h3 class="font-rpg text-xl text-rpg-text mb-4 border-b border-rpg-border pb-2">Estadísticas de Combate</h3>
-            
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <div class="bg-rpg-bg p-4 rounded-lg border border-rpg-border/50 text-center">
-                <div class="text-rpg-danger text-2xl mb-1">❤️</div>
-                <div class="text-2xl font-bold text-rpg-text">{{ personaje()?.salud ?? 0 }}</div>
-                <div class="text-xs text-rpg-muted uppercase tracking-wide">Salud</div>
-              </div>
-              
-              <div class="bg-rpg-bg p-4 rounded-lg border border-rpg-border/50 text-center">
-                <div class="text-orange-500 text-2xl mb-1">⚔️</div>
-                <div class="text-2xl font-bold text-rpg-text">{{ personaje()?.fuerza ?? 0 }}</div>
-                <div class="text-xs text-rpg-muted uppercase tracking-wide">Fuerza</div>
-              </div>
-              
-              <div class="bg-rpg-bg p-4 rounded-lg border border-rpg-border/50 text-center">
-                <div class="text-yellow-500 text-2xl mb-1">⚡</div>
-                <div class="text-2xl font-bold text-rpg-text">{{ personaje()?.energia ?? 0 }}</div>
-                <div class="text-xs text-rpg-muted uppercase tracking-wide">Energía</div>
-              </div>
-              
-              <div class="bg-rpg-bg p-4 rounded-lg border border-rpg-border/50 text-center">
-                <div class="text-purple-500 text-2xl mb-1">🔮</div>
-                <div class="text-2xl font-bold text-rpg-text">{{ personaje()?.magia ?? 0 }}</div>
-                <div class="text-xs text-rpg-muted uppercase tracking-wide">Magia</div>
-              </div>
-              
-              <div class="bg-rpg-bg p-4 rounded-lg border border-rpg-border/50 text-center">
-                <div class="text-blue-500 text-2xl mb-1">💧</div>
-                <div class="text-2xl font-bold text-rpg-text">{{ personaje()?.mana ?? 0 }}</div>
-                <div class="text-xs text-rpg-muted uppercase tracking-wide">Maná</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      }
+      <div
+        class="w-32 h-32 rounded-full border-4 border-rpg-border overflow-hidden mb-4 bg-rpg-bg flex items-center justify-center"
+      >
+        <span class="text-5xl">👤</span>
+      </div>
+
+      <h2 class="text-3xl font-rpg text-rpg-gold mb-1">
+        {{ personaje()?.nombreUsuario }}
+      </h2>
+      <span
+        class="px-3 py-1 bg-rpg-gold/20 text-rpg-gold text-xs font-semibold rounded-full uppercase tracking-wider mb-4"
+      >
+        {{ personaje()?.etiqueta || 'Sin Etiqueta' }}
+      </span>
     </div>
- 
+
+    <div class="rpg-card col-span-1 md:col-span-2">
+      <h3
+        class="font-rpg text-xl text-rpg-text mb-4 border-b border-rpg-border pb-2"
+      >
+        Estadísticas de Combate
+      </h3>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div
+          class="bg-rpg-bg p-4 rounded-lg border border-rpg-border/50 text-center"
+        >
+          <div class="text-rpg-danger text-2xl mb-1">❤️</div>
+          <div class="text-2xl font-bold text-rpg-text">
+            {{ personaje()?.salud ?? 0 }}
+          </div>
+          <div class="text-xs text-rpg-muted uppercase tracking-wide">
+            Salud
+          </div>
+        </div>
+
+        <div
+          class="bg-rpg-bg p-4 rounded-lg border border-rpg-border/50 text-center"
+        >
+          <div class="text-orange-500 text-2xl mb-1">⚔️</div>
+          <div class="text-2xl font-bold text-rpg-text">
+            {{ personaje()?.fuerza ?? 0 }}
+          </div>
+          <div class="text-xs text-rpg-muted uppercase tracking-wide">
+            Fuerza
+          </div>
+        </div>
+
+        <div
+          class="bg-rpg-bg p-4 rounded-lg border border-rpg-border/50 text-center"
+        >
+          <div class="text-yellow-500 text-2xl mb-1">⚡</div>
+          <div class="text-2xl font-bold text-rpg-text">
+            {{ personaje()?.energia ?? 0 }}
+          </div>
+          <div class="text-xs text-rpg-muted uppercase tracking-wide">
+            Energía
+          </div>
+        </div>
+
+        <div
+          class="bg-rpg-bg p-4 rounded-lg border border-rpg-border/50 text-center"
+        >
+          <div class="text-purple-500 text-2xl mb-1">🔮</div>
+          <div class="text-2xl font-bold text-rpg-text">
+            {{ personaje()?.magia ?? 0 }}
+          </div>
+          <div class="text-xs text-rpg-muted uppercase tracking-wide">
+            Magia
+          </div>
+        </div>
+
+        <div
+          class="bg-rpg-bg p-4 rounded-lg border border-rpg-border/50 text-center"
+        >
+          <div class="text-blue-500 text-2xl mb-1">💧</div>
+          <div class="text-2xl font-bold text-rpg-text">
+            {{ personaje()?.mana ?? 0 }}
+          </div>
+          <div class="text-xs text-rpg-muted uppercase tracking-wide">Maná</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

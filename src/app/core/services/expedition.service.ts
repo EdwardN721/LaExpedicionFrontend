@@ -29,18 +29,18 @@ export class ExpeditionService {
   }
 
   getById(id: string): Observable<ExpedicionDto> {
-    return this.http.get<ExpedicionDto>(`${this.apiUrl}/${id}`);
+    return this.http.get<ExpedicionDto>(`${this.apiUrl}/Expedicion/${id}`);
   }
 
   create(dto: CrearExpedicionDto): Observable<ExpedicionDto> {
-    return this.http.post<ExpedicionDto>(this.apiUrl, dto);
+    return this.http.post<ExpedicionDto>(`${this.apiUrl}/Expedicion`, dto);
   }
 
   update(id: string, dto: ActualizarExpedicionDto): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${id}`, dto);
+    return this.http.put<void>(`${this.apiUrl}/Expedicion/${id}`, dto);
   }
 
   delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/Expedicion/${id}`);
   }
 }

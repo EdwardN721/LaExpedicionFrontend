@@ -26,7 +26,7 @@ export class InventarioService {
   }
 
   agregarItem(dto: CrearInventarioDto): Observable<InventarioDto> {
-    return this.http.post<InventarioDto>(`${this.apiUrl}/agregar`, dto);
+    return this.http.post<InventarioDto>(`${this.apiUrl}/Inventario/agregar`, dto);
   }
 
   actualizarInventario(id: string, dto: ActualizarInventarioDto): Observable<void> {
@@ -35,14 +35,14 @@ export class InventarioService {
 
   // Mecánicas de juego (Endpoints específicos)
   usarItem(id: string, usos: number = 1): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${id}/usar?usos=${usos}`, {});
+    return this.http.post(`${this.apiUrl}/Inventario/${id}/usar`, {});
   }
 
   equiparItem(id: string): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/${id}/equipar`, {});
+    return this.http.patch(`${this.apiUrl}/Inventario/${id}/equipar`, {});
   }
 
   eliminarDelInventario(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/Inventario/${id}`);
   }
 }

@@ -72,11 +72,30 @@ export class AuthService {
 
   private _decodeToken(token: string): TokenPayload | null {
     try {
-      const base64Payload = token.split('.')[1];
-      const decoded = atob(base64Payload);
-      return JSON.parse(decoded) as TokenPayload;
-    } catch {
+      if (!token || token.split('.').length !== 3) {
+        return null;
+      }
+
+      // 1. Extraemos el texto en Base64Url y lo pasamos a Base64 normal
+      let payloadBase64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      
+      // 2. ¡EL TRUCO MÁGICO! Rellenamos con "=" para que ningún navegador explote
+      const pad = payloadBase64.length % 4;
+      if (pad) {
+        payloadBase64 += '='.repeat(4 - pad);
+      }
+
+      // 3. Decodificamos de forma segura
+      const decodedText = window.atob(payloadBase64);
+      const utf8Text = decodeURIComponent(
+        decodedText.split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+      );
+
+      return JSON.parse(utf8Text) as TokenPayload;
+    } catch (error) {
+      console.error('El JWT falló al decodificarse:', error);
       return null;
     }
   }
+  
 }

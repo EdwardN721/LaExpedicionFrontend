@@ -13,16 +13,16 @@ export class PlayerService {
   // ─── Personajes ───
   // Obtiene el personaje de un usuario específico
   getPersonajeByUsuarioId(usuarioId: string): Observable<PersonajeDto> {
-    return this.http.get<PersonajeDto>(`${this.apiUrl}/personajes/usuario/${usuarioId}`);
+    return this.http.get<PersonajeDto>(`${this.apiUrl}/Personaje/${usuarioId}`);
   }
 
   crearPersonaje(dto: CrearPersonajeDto): Observable<PersonajeDto> {
-    return this.http.post<PersonajeDto>(`${this.apiUrl}/personajes`, dto);
+    return this.http.post<PersonajeDto>(`${this.apiUrl}/Personaje`, dto);
   }
 
   // ─── Inventario ───
   // Obtiene el inventario de un personaje específico
   getInventarioByPersonajeId(personajeId: string): Observable<InventarioDto[]> {
-    return this.http.get<InventarioDto[]>(`${this.apiUrl}/inventarios/personaje/${personajeId}`);
+    return this.http.get<InventarioDto[]>(`${this.apiUrl}/Inventario/personaje/${personajeId}`);
   }
 }

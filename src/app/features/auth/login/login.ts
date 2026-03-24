@@ -31,23 +31,20 @@ export class LoginComponent {
       return;
     }
 
-    this.loading.set(true);
+    this.loading.set(true); // El botón empieza a girar
     
     this.auth.login(this.form.getRawValue() as any).subscribe({
       next: () => {
-        this.toast.success('Bienvenido de vuelta.');
-        // Aquí podrías leer el rol del usuario (Admin vs User) para redirigir
-        const role = this.auth.userRole();
-        if (role === 'Admin') {
-          this.router.navigate(['/admin']);
-        } else {
-          this.router.navigate(['/play']);
-        }
+        this.loading.set(false); // 👈 ¡ESTO DETIENE EL GIRO DEL BOTÓN!
+        this.toast.success('Bienvenido a La Expedición.');
+        
+        // Forzamos la redirección directa al juego para no depender del Rol por ahora
+        this.router.navigate(['/play']); 
       },
       error: (err) => {
-        this.loading.set(false);
+        this.loading.set(false); // Detiene el giro si hay error
         this.toast.error('Credenciales incorrectas.');
-        console.error(err);
+        console.error('Error de servidor:', err);
       }
     });
   }

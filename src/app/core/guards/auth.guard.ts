@@ -1,4 +1,4 @@
-import { CanActivateFn, Router } from '@angular/router';
+/*import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 
@@ -24,4 +24,21 @@ export const authGuard: CanActivateFn = (route, state) => {
 
   // Si pasa todo, le damos acceso
   return true;
+};*/
+
+import { CanActivateFn, Router } from '@angular/router';
+import { inject } from '@angular/core';
+import { AuthService } from '../services/auth.service';
+
+export const authGuard: CanActivateFn = (route, state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  // 1. Si está autenticado y el token es válido, ¡Déjalo jugar!
+  if (authService.isAuthenticated()) {
+    return true; 
+  }
+
+  // 2. Si no hay token o ya caducó, patéalo de regreso al login
+  return router.createUrlTree(['/auth/login']);
 };
