@@ -10,5 +10,10 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrl: './player-shell.css'
 })
 export class PlayerShellComponent {
-  readonly auth = inject(AuthService);
+  private auth = inject(AuthService);
+  userName = this.auth.userName; // Lee el signal del nombre directamente
+
+  logout() {
+    this.auth.logout();
+  }
 }

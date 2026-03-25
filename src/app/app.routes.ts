@@ -60,19 +60,25 @@ export const routes: Routes = [
     ],
   },
 
-  // ─── Player routes (role: User) ─────────────────────────────────
+ // ─── Player routes (role: User) ─────────────────────────────────
   {
     path: 'play',
     canActivate: [authGuard],
-    data: { role: 'User' },
+    // data: { role: 'User' }, <-- (Opcional: Si tu AuthGuard no revisa roles, puedes dejarla o quitarla)
     loadComponent: () =>
       import('./features/player/player-shell/player-shell').then(
         (m) => m.PlayerShellComponent
       ),
     children: [
+      // 1. Redirigir por defecto a personaje si solo escriben "/play"
       {
         path: '',
         pathMatch: 'full',
+        redirectTo: 'personaje'
+      },
+      // 2. La ruta exacta que busca el botón del menú
+      {
+        path: 'personaje',
         loadComponent: () =>
           import(
             './features/player/personaje/personaje'

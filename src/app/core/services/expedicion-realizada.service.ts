@@ -13,7 +13,7 @@ export class ExpedicionRealizadaService {
   obtenerHistorial(personajeId: string, page: number, limit: number): Observable<PaginatedResponse<ExpedicionRealizadaDto>> {
     const params = new HttpParams().set('PageNumber', page).set('PageSize', limit);
     
-    return this.http.get<ExpedicionRealizadaDto[]>(`${this.apiUrl}/ExpedicionRealizada/${personajeId}/historial`, { params, observe: 'response' }).pipe(
+    return this.http.get<ExpedicionRealizadaDto[]>(`${this.apiUrl}/${personajeId}/historial`, { params, observe: 'response' }).pipe(
       map((response: HttpResponse<ExpedicionRealizadaDto[]>) => {
         const paginationHeader = response.headers.get('X-Pagination');
         return {
@@ -26,6 +26,6 @@ export class ExpedicionRealizadaService {
 
   emprenderAventura(personajeId: string, expedicionId: string): Observable<ExpedicionRealizadaDto> {
     // Al ser un POST sin body, enviamos un objeto vacío {}
-    return this.http.post<ExpedicionRealizadaDto>(`${this.apiUrl}/ExpedicionRealizada/${personajeId}/${expedicionId}`, {});
+    return this.http.post<ExpedicionRealizadaDto>(`${this.apiUrl}/${personajeId}/${expedicionId}`, {});
   }
 }
