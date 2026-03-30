@@ -24,23 +24,29 @@ export class InventarioComponent implements OnInit {
   personajeId: string | null = null;
 
   ngOnInit(): void {
-    const userId = this.auth.currentUser()?.sub;
-    if (userId) {
-      this.playerSvc.getPersonajeByUsuarioId(userId).subscribe({
-        next: (p) => {
-          this.personajeId = p.id;
-          this.cargarInventario();
-        },
-        error: () => { this.loading.set(false); }
-      });
+    // 1. Leemos el ID del personaje desde la memoria
+    const personajeId = localStorage.getItem('personajeActivoId');
+
+    if (!personajeId) {
+      console.warn('Aún no tienes un personaje creado.');
+      return; // Detenemos la petición para no provocar errores en rojo
     }
+
+    // 2. Ahora sí, le pedimos al backend los items de ESTE personaje específico
+    this.invSvc.getInventario(personajeId).subscribe({
+      next: (res: any) => {
+        // Nota: Si tu backend devuelve un JSON con paginación, podría ser res.items o res.data
+        this.inventario.set(res.items || res || []);
+      },
+      error: (err) => console.error('Error del Oráculo:', err)
+    });
   }
 
   cargarInventario(): void {
     if (!this.personajeId) return;
     this.loading.set(true);
     // Solicitamos la página 1, límite 50 (puedes ajustar o agregar controles de paginación después)
-    this.invSvc.obtenerInventario(this.personajeId, 1, 50).subscribe({
+    this.invSvc.getInventario(this.personajeId, 1, 50).subscribe({
       next: (res) => {
         this.inventario.set(res.data);
         this.loading.set(false);

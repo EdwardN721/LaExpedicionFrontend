@@ -38,7 +38,7 @@ export class ExpeditionListComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.svc.getAll(this.currentPage(), 10).subscribe({
+    this.svc.getExpediciones(this.currentPage(), 10).subscribe({
       next: (r) => { 
         this.expeditions.set(r.data); 
         this.pagination.set(r.pagination); 

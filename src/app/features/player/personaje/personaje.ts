@@ -37,7 +37,10 @@ export class PersonajeComponent implements OnInit {
     this.loading.set(true);
     
     const user: any = this.authSvc.currentUser();
-    const usuarioId = user?.nameid || user?.sub || user?.id; // Atrapamos el ID en cualquier formato
+    console.log('1. Mi Pase VIP (Token):', user); // Mira qué ID tienes asignado
+
+    const usuarioId = user?.nameid || user?.sub || user?.id;
+    console.log('2. ID exacto que mandamos al Backend:', usuarioId);
 
     if (!usuarioId) {
       this.toast.error('No se detectó la sesión del jugador.');
@@ -47,15 +50,28 @@ export class PersonajeComponent implements OnInit {
 
     this.playerSvc.getPersonajeByUsuarioId(usuarioId).subscribe({
       next: (personaje) => {
-        this.personaje.set(personaje); // Si existe, lo pintamos
+        console.log('3. ¡Éxito! El backend encontró a:', personaje);
+        
+        // OJO: Por si el backend está devolviendo un arreglo [ {..} ] en lugar de un objeto {..}
+        const personajeValido = Array.isArray(personaje) ? personaje[0] : personaje;
+        
+        this.personaje.set(personajeValido);
+
+        const p = Array.isArray(personaje) ? personaje[0] : personaje;
+        this.personaje.set(p);
+        
+        // Guardamos el ID del personaje en memoria
+        if (p && p.id) {
+          localStorage.setItem('personajeActivoId', p.id);
+        }
+
         this.loading.set(false);
       },
       error: (err) => {
+        console.error('3. El backend rechazó la búsqueda:', err);
         if (err.status === 404) {
-          // ¡Excelente! No tiene personaje, mostraremos el formulario
+          // Confirmado: No tienes personajes vinculados a tu cuenta actual
           this.personaje.set(null);
-        } else {
-          this.toast.error('Error de red al consultar el oráculo.');
         }
         this.loading.set(false);
       }

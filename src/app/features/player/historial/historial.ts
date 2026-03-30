@@ -1,8 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ExpedicionRealizadaService } from '../../../core/services/expedicion-realizada.service';
-import { PlayerService } from '../../../core/services/player.service';
-import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { ExpedicionRealizadaDto, PaginationMeta } from '../../../core/models/expedition.models';
 
@@ -14,50 +12,50 @@ import { ExpedicionRealizadaDto, PaginationMeta } from '../../../core/models/exp
   styleUrl: './historial.css'
 })
 export class HistorialComponent implements OnInit {
+  // 1. Limpiamos las inyecciones duplicadas y dejamos solo las necesarias
   private readonly expRealizadaSvc = inject(ExpedicionRealizadaService);
-  private readonly playerSvc = inject(PlayerService);
-  private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
 
   readonly records = signal<ExpedicionRealizadaDto[]>([]);
   readonly loading = signal(true);
   readonly pagination = signal<PaginationMeta | null>(null);
   readonly currentPage = signal(1);
+  
   personajeId: string | null = null;
 
-  ngOnInit() {
-    const userId = this.auth.currentUser()?.sub;
-    if (userId) {
-      this.playerSvc.getPersonajeByUsuarioId(userId).subscribe({
-        next: (p) => {
-          this.personajeId = p.id;
-          this.loadHistory();
-        },
-        error: () => this.loading.set(false)
-      });
-    } else {
-      this.loading.set(false);
-    }
+  ngOnInit(): void {
+    this.cargarHistorial();
   }
 
-  loadHistory() {
-    if (!this.personajeId) return;
+  cargarHistorial(): void {
+    this.personajeId = localStorage.getItem('personajeActivoId');
+
+    if (!this.personajeId) {
+      this.loading.set(false);
+      return;
+    }
+
     this.loading.set(true);
+
+    // 2. CORRECCIÓN: Le pasamos el ID, la página actual (1 por defecto) y un límite de 10
     this.expRealizadaSvc.obtenerHistorial(this.personajeId, this.currentPage(), 10).subscribe({
       next: (res) => {
-        this.records.set(res.data);
-        this.pagination.set(res.pagination);
+        // 3. CORRECCIÓN: Usamos records (no registros) y guardamos la data y la paginación
+        this.records.set(res.data || []);
+        this.pagination.set(res.pagination || null);
         this.loading.set(false);
       },
-      error: () => {
-        this.toast.error('Error al cargar el diario.');
+      error: (err: any) => {
+        console.error('Error cargando historial:', err);
+        this.toast.error('No se pudo leer la bitácora.');
         this.loading.set(false);
       }
     });
   }
 
-  changePage(p: number) {
-    this.currentPage.set(p);
-    this.loadHistory();
+  // 👇 Método extra: Agrégalo por si quieres poner botones de "Siguiente / Anterior" en tu HTML
+  cambiarPagina(nuevaPagina: number): void {
+    this.currentPage.set(nuevaPagina);
+    this.cargarHistorial();
   }
 }

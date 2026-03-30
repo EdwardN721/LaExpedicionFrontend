@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { InventarioDto, CrearInventarioDto, ActualizarInventarioDto } from '../models/player.models';
 import { PaginatedResponse, PaginationMeta } from '../models/item.models'; // Reutilizamos tu interfaz de paginación
 
+
 @Injectable({ providedIn: 'root' })
 export class InventarioService {
   private readonly http = inject(HttpClient);
@@ -23,6 +24,11 @@ export class InventarioService {
         };
       })
     );
+  }
+
+  getInventario(personajeId: string, pageNumber: number = 1, pageSize: number = 10): Observable<any> {
+   const params = new HttpParams().set('PageNumber', pageNumber).set('PageSize', pageSize);
+    return this.http.get<any>(`${this.apiUrl}/personaje/${personajeId}`, { params });
   }
 
   agregarItem(dto: CrearInventarioDto): Observable<InventarioDto> {

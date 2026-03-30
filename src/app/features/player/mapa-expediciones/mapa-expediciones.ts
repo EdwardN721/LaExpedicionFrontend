@@ -2,88 +2,88 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ExpeditionService } from '../../../core/services/expedition.service';
 import { ExpedicionRealizadaService } from '../../../core/services/expedicion-realizada.service';
-import { PlayerService } from '../../../core/services/player.service';
-import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../shared/services/toast.service';
-import { ExpedicionDto, PaginationMeta } from '../../../core/models/expedition.models';
+// 👇 Asegúrate de importar tu DTO o modelo del mapa
+import { ExpedicionDto } from '../../../core/models/expedition.models'; 
+import { PaginationMeta } from '../../../core/models/expedition.models';
 
 @Component({
   selector: 'app-mapa-expediciones',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './mapa-expediciones.html' ,
-  styleUrl: './mapa-expediciones.css'
+  templateUrl: './mapa-expediciones.html'
 })
 export class MapaExpedicionesComponent implements OnInit {
-  private readonly expSvc = inject(ExpeditionService);
-  private readonly expRealizadaSvc = inject(ExpedicionRealizadaService);
-  private readonly playerSvc = inject(PlayerService);
-  private readonly auth = inject(AuthService);
-  private readonly toast = inject(ToastService);
+  private expeditionService = inject(ExpeditionService);
+  private aventuraService = inject(ExpedicionRealizadaService);
+  private toast = inject(ToastService);
 
+  // 👇 Signals adaptados para la paginación (igual que en historial)
   readonly expediciones = signal<ExpedicionDto[]>([]);
-  readonly loading = signal(true);
-  readonly adventuring = signal<string | null>(null);
   readonly pagination = signal<PaginationMeta | null>(null);
   readonly currentPage = signal(1);
-  personajeId: string | null = null;
+  
+  loading = signal<boolean>(true);
+  enAventura = signal<boolean>(false);
 
   ngOnInit(): void {
-    const userId = this.auth.currentUser()?.sub;
-    if (userId) {
-      this.playerSvc.getPersonajeByUsuarioId(userId).subscribe({
-        next: (p) => {
-          this.personajeId = p.id;
-          this.loadExpeditions();
-        },
-        error: () => this.loading.set(false)
-      });
-    } else {
-      this.loading.set(false);
-    }
+    this.cargarMapa();
   }
 
-  loadExpeditions(): void {
+  cargarMapa(): void {
     this.loading.set(true);
-    this.expSvc.getAll(this.currentPage(), 9).subscribe({
-      next: (res) => {
-        this.expediciones.set(res.data);
-        this.pagination.set(res.pagination);
+
+    // 👇 Si tu servicio ahora exige paginación, le mandamos la página y el límite (ej. 10)
+    // Si tu servicio no exige paginación, quítale "this.currentPage(), 10"
+    this.expeditionService.getExpediciones(this.currentPage(), 10).subscribe({
+      next: (res: any) => {
+        // Adaptado para recibir la respuesta paginada { data: [...], pagination: {...} }
+        this.expediciones.set(res?.data || res?.items || res || []);
+        
+        if (res?.pagination) {
+          this.pagination.set(res.pagination);
+        }
+
         this.loading.set(false);
       },
-      error: () => {
-        this.toast.error('Error al cargar el mapa.');
+      error: (err: any) => {
+        console.error('Error cargando mapa:', err);
+        this.toast.error('Las nubes ocultan el mapa hoy.');
         this.loading.set(false);
       }
     });
   }
 
-  changePage(p: number): void {
-    this.currentPage.set(p);
-    this.loadExpeditions();
-  }
+  emprenderExpedicion(expedicionId: string): void {
+    const personajeId = localStorage.getItem('personajeActivoId');
 
-  startAdventure(expedicionId: string): void {
-    if (!this.personajeId) {
-      this.toast.error('Necesitas crear un personaje primero.');
+    if (!personajeId) {
+      this.toast.error('No tienes un héroe para enviar a esta aventura.');
       return;
     }
 
-    this.adventuring.set(expedicionId);
+    this.enAventura.set(true);
     
-    this.expRealizadaSvc.emprenderAventura(this.personajeId, expedicionId).subscribe({
-      next: (res) => {
-        this.adventuring.set(null);
-        if (res.resultado === 'Exito') {
-          this.toast.success(`¡Misión completada! Has ganado ${res.dineroGanado} oro y ${res.experienciaGanada} XP.`);
-        } else {
-          this.toast.error(`Fracasaste en la misión. No obtuviste recompensas.`);
-        }
+    // Llamada al endpoint POST vacío que tienes en el backend
+    this.aventuraService.emprenderAventura(personajeId, expedicionId).subscribe({
+      next: (resultado: any) => {
+        this.toast.success('¡Has regresado de la expedición con gloria!');
+        this.enAventura.set(false);
+        
+        // Opcional: Podrías redirigir al historial para ver qué pasó
+        // this.router.navigate(['/play/historial']);
       },
-      error: () => {
-        this.toast.error('Un error mágico interrumpió la expedición.');
-        this.adventuring.set(null);
+      error: (err: any) => {
+        console.error('Error en expedición:', err);
+        this.toast.error('La expedición ha fracasado catastróficamente.');
+        this.enAventura.set(false);
       }
     });
+  }
+  
+  // 👇 Por si quieres poner botones de paginación en el HTML
+  cambiarPagina(nuevaPagina: number): void {
+    this.currentPage.set(nuevaPagina);
+    this.cargarMapa();
   }
 }

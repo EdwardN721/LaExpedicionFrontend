@@ -1,62 +1,64 @@
+<div class="min-h-screen bg-gray-900 text-gray-100 p-4 sm:p-6 lg:p-8">
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500 mb-8 text-center sm:text-left">
+      Mapa del Mundo
+    </h1>
 
-    <div class="max-w-5xl mx-auto">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="font-rpg text-2xl text-rpg-gold">Mapa de Expediciones</h2>
+    @if (loading()) {
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+        @for (i of [1,2,3]; track i) {
+          <div class="h-56 bg-gray-800 rounded-xl border border-gray-700"></div>
+        }
       </div>
-
-      @if (loading()) {
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-          @for (i of [1,2,3]; track i) {
-            <div class="h-48 bg-rpg-border/40 rounded-xl"></div>
-          }
-        </div>
-      } @else {
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          @for (exp of expediciones(); track exp.id) {
-            <div class="rpg-card flex flex-col justify-between hover:border-rpg-gold/50 transition-colors">
-              <div>
-                <h3 class="font-rpg text-xl text-rpg-text mb-2">{{ exp.nombre }}</h3>
-                <p class="text-sm text-rpg-muted mb-4">{{ exp.descripcion || 'Sin descripción' }}</p>
-                
-                <div class="grid grid-cols-2 gap-2 text-sm bg-rpg-bg/50 p-3 rounded-lg border border-rpg-border/50 mb-4">
-                  <div class="flex flex-col">
-                    <span class="text-xs text-rpg-muted uppercase">Recompensa</span>
-                    <span class="text-rpg-gold font-bold">+{{ exp.dinero }} Oro</span>
-                  </div>
-                  <div class="flex flex-col">
-                    <span class="text-xs text-rpg-muted uppercase">Experiencia</span>
-                    <span class="text-blue-400 font-bold">+{{ exp.experiencia }} XP</span>
-                  </div>
+    } @else {
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (exp of expediciones(); track exp.id) {
+          <div class="bg-gray-800 rounded-xl shadow-xl p-6 border border-gray-700 flex flex-col justify-between hover:border-purple-500 transition-colors group">
+            <div>
+              <h3 class="text-xl font-bold text-white mb-2 group-hover:text-purple-400 transition-colors">{{ exp.nombre }}</h3>
+              <p class="text-sm text-gray-400 mb-4 line-clamp-2">{{ exp.descripcion || 'Una zona inexplorada llena de misterios.' }}</p>
+              
+              <div class="grid grid-cols-2 gap-4 bg-gray-900 p-4 rounded-lg border border-gray-700 mb-6 text-center sm:text-left">
+                <div class="flex flex-col items-center sm:items-start">
+                  <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1">Recompensa</span>
+                  
+                </div>
+                <div class="flex flex-col items-center sm:items-start border-l border-gray-700 pl-4 sm:border-none sm:pl-0">
+                  <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1">Experiencia</span>
+                  
                 </div>
               </div>
+            </div>
 
-              <button class="btn-primary w-full py-2 flex items-center justify-center gap-2"
-                      [disabled]="adventuring() === exp.id || !personajeId"
-                      (click)="startAdventure(exp.id)">
-                @if (adventuring() === exp.id) {
-                  <span class="inline-block w-4 h-4 border-2 border-rpg-bg/40 border-t-rpg-bg rounded-full animate-spin"></span>
-                  Explorando...
-                } @else {
-                  ⚔️ Emprender Misión
-                }
-              </button>
-            </div>
-          } @empty {
-            <div class="col-span-full text-center py-12 rpg-card">
-              🗺️ No hay misiones disponibles en el mapa ahora mismo.
-            </div>
-          }
-        </div>
-        
-        @if (pagination(); as pg) {
-          <div class="flex items-center justify-between mt-6 text-sm text-rpg-muted">
-            <span>Página {{ pg.currentPage }} de {{ pg.totalPages }}</span>
-            <div class="flex gap-2">
-              <button class="btn-secondary py-1.5 px-3 text-xs" [disabled]="!pg.hasPrevious" (click)="changePage(pg.currentPage - 1)">Anterior</button>
-              <button class="btn-secondary py-1.5 px-3 text-xs" [disabled]="!pg.hasNext" (click)="changePage(pg.currentPage + 1)">Siguiente</button>
-            </div>
+            <button class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg flex justify-center items-center"
+                    [disabled]="enAventura()"
+                    (click)="emprenderExpedicion(exp.id)">
+              @if (enAventura()) {
+                <span class="animate-spin h-5 w-5 mr-3 border-t-2 border-b-2 border-white rounded-full"></span>
+                Explorando...
+              } @else {
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Emprender Misión
+              }
+            </button>
+          </div>
+        } @empty {
+          <div class="col-span-full text-center py-12 bg-gray-800 rounded-xl border border-gray-700 text-gray-400 shadow-inner">
+            <svg class="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+            No hay misiones disponibles en el mapa ahora mismo.
           </div>
         }
+      </div>
+      
+      @if (pagination(); as pg) {
+        <div class="flex flex-col sm:flex-row items-center justify-between mt-8 text-sm text-gray-400 bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
+          <span class="mb-4 sm:mb-0 font-medium">Página {{ pg.currentPage }} de {{ pg.totalPages }}</span>
+          <div class="flex gap-2 w-full sm:w-auto">
+            <button class="flex-1 sm:flex-none bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" [disabled]="!pg.hasPrevious" (click)="cambiarPagina(pg.currentPage - 1)">Anterior</button>
+            <button class="flex-1 sm:flex-none bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" [disabled]="!pg.hasNext" (click)="cambiarPagina(pg.currentPage + 1)">Siguiente</button>
+          </div>
+        </div>
       }
-    </div>
-  
+    }
+  </div>
+</div>

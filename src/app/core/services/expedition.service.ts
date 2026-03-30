@@ -28,6 +28,11 @@ export class ExpeditionService {
       );
   }
 
+  getExpediciones(pageNumber: number = 1, pageSize: number = 10): Observable<any> {
+    const params = new HttpParams().set('PageNumber', pageNumber).set('PageSize', pageSize);
+    return this.http.get<any>(this.apiUrl, { params });
+  }
+
   getById(id: string): Observable<ExpedicionDto> {
     return this.http.get<ExpedicionDto>(`${this.apiUrl}/${id}`);
   }
