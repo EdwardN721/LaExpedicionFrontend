@@ -1,95 +1,111 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { InventarioService } from '../../../core/services/inventario.service';
-import { PlayerService } from '../../../core/services/player.service';
-import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../shared/services/toast.service';
-import { InventarioDto } from '../../../core/models/player.models';
 
 @Component({
   selector: 'app-inventario',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './inventario.html',
-  styleUrl: './inventario.css'
+  templateUrl: './inventario.html'
 })
 export class InventarioComponent implements OnInit {
-  private readonly invSvc = inject(InventarioService);
-  private readonly playerSvc = inject(PlayerService);
-  private readonly auth = inject(AuthService);
-  private readonly toast = inject(ToastService);
+  private inventarioService = inject(InventarioService);
+  private toast = inject(ToastService);
 
-  readonly inventario = signal<InventarioDto[]>([]);
-  readonly loading = signal(true);
-  personajeId: string | null = null;
+  items = signal<any[]>([]);
+  loading = signal<boolean>(true);
 
   ngOnInit(): void {
-    // 1. Leemos el ID del personaje desde la memoria
-    const personajeId = localStorage.getItem('personajeActivoId');
-
-    if (!personajeId) {
-      console.warn('Aún no tienes un personaje creado.');
-      return; // Detenemos la petición para no provocar errores en rojo
-    }
-
-    // 2. Ahora sí, le pedimos al backend los items de ESTE personaje específico
-    this.invSvc.getInventario(personajeId).subscribe({
-      next: (res: any) => {
-        // Nota: Si tu backend devuelve un JSON con paginación, podría ser res.items o res.data
-        this.inventario.set(res.items || res || []);
-      },
-      error: (err) => console.error('Error del Oráculo:', err)
-    });
+    this.cargarInventario();
   }
 
   cargarInventario(): void {
-    if (!this.personajeId) return;
-    this.loading.set(true);
-    // Solicitamos la página 1, límite 50 (puedes ajustar o agregar controles de paginación después)
-    this.invSvc.getInventario(this.personajeId, 1, 50).subscribe({
-      next: (res) => {
-        this.inventario.set(res.data);
+    this.loading.set(true); // Aseguramos que muestre el esqueleto de carga
+    
+    const personajeId = localStorage.getItem('personajeActivoId');
+
+    if (!personajeId) {
+      this.toast.error('El personaje aún no está listo. Vuelve al Campamento.');
+      this.loading.set(false);
+      return;
+    }
+
+    this.inventarioService.getInventario(personajeId).subscribe({
+      next: (res: any) => {
+        const listaItems = res?.data || res?.items || res || [];
+        this.items.set(Array.isArray(listaItems) ? listaItems : []);
         this.loading.set(false);
       },
-      error: () => {
-        this.toast.error('Error al abrir la mochila.');
+      error: (err: any) => {
+        console.error('Error al cargar inventario:', err);
+        this.toast.error('No se pudo abrir la mochila.');
         this.loading.set(false);
       }
     });
   }
 
-  usarItem(item: InventarioDto): void {
-    if (item.usosRestantes <= 0) {
-      this.toast.error('El objeto está roto o vacío.');
+  toggleEquipar(inv: any): void {
+    if (inv.equipado) {
+      this.inventarioService.desequiparItem(inv.id).subscribe({
+        next: () => {
+          this.toast.success(`Has desequipado: ${inv.item?.nombre}`);
+          this.cargarInventario(); 
+        },
+        error: (err) => {
+          console.error(err);
+          this.toast.error('Magia negra impide desequipar este objeto.');
+        }
+      });
+    } 
+    else {
+      this.inventarioService.equiparItem(inv.id).subscribe({
+        next: () => {
+          this.toast.success(`Has equipado: ${inv.item?.nombre}`);
+          this.cargarInventario(); 
+        },
+        error: (err) => {
+          console.error(err);
+          this.toast.error('No tienes suficiente poder para equipar esto.');
+        }
+      });
+    }
+  }
+
+  usarItem(inv: any): void {
+    if (inv.usosRestantes <= 0) {
+      this.toast.error('Este objeto se ha quedado sin magia/usos.');
       return;
     }
-    this.invSvc.usarItem(item.id).subscribe({
+
+    // Llama al servicio que corregimos en el paso anterior
+    this.inventarioService.usarItem(inv.id, 1).subscribe({
       next: (res: any) => {
-        this.toast.success(res.mensaje || 'Objeto utilizado.');
-        this.cargarInventario(); // Recargamos para actualizar los usos
+        this.toast.success(`Has usado: ${inv.item?.nombre || inv.nombreItem}`);
+        this.cargarInventario();
       },
-      error: () => this.toast.error('No se pudo usar el objeto.')
+      error: (err: any) => {
+        console.error('Error al usar item:', err);
+        this.toast.error('No se pudo utilizar el objeto.');
+      }
     });
   }
 
-  equiparItem(item: InventarioDto): void {
-    this.invSvc.equiparItem(item.id).subscribe({
-      next: (res: any) => {
-        this.toast.success(res.mensaje || 'Estado de equipamiento cambiado.');
-        this.cargarInventario();
-      },
-      error: () => this.toast.error('Error al cambiar equipo.')
-    });
+  tirarItem(inv: any): void {
+    const confirmar = confirm(`¿Estás seguro de que deseas abandonar ${inv.item?.nombre || inv.nombreItem} en el bosque? Esta acción no se puede deshacer.`);
+    
+    if (confirmar) {
+      this.inventarioService.eliminarDelInventario(inv.id).subscribe({
+        next: () => {
+          this.toast.success('El objeto ha sido destruido.');
+          this.cargarInventario(); // Recargamos para que desaparezca de la mochila
+        },
+        error: (err: any) => {
+          console.error('Error al tirar item:', err);
+          this.toast.error('Una fuerza misteriosa te impide tirar este objeto.');
+        }
+      });
+    }
   }
 
-  tirarItem(item: InventarioDto): void {
-    if (!confirm(`¿Estás seguro de que deseas tirar ${item.nombreItem}? Se perderá para siempre.`)) return;
-    this.invSvc.eliminarDelInventario(item.id).subscribe({
-      next: () => {
-        this.toast.success('Objeto descartado.');
-        this.cargarInventario();
-      },
-      error: () => this.toast.error('Error al descartar el objeto.')
-    });
-  }
 }
