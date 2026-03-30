@@ -7,6 +7,8 @@ export interface ItemDto {
   descripcion?: string | null;
   estadisticaAfectada?: string | null;
   valorAjuste?: number | null;
+  precio: number; 
+  itemModificador: ItemModificadorDto[];
 }
 
 export interface ItemModificadorDto {

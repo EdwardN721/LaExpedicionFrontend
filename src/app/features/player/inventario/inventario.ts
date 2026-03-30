@@ -91,18 +91,19 @@ export class InventarioComponent implements OnInit {
     });
   }
 
-  tirarItem(inv: any): void {
-    const confirmar = confirm(`¿Estás seguro de que deseas abandonar ${inv.item?.nombre || inv.nombreItem} en el bosque? Esta acción no se puede deshacer.`);
+  // Reemplaza el método tirarItem con esto:
+  venderItem(inv: any): void {
+    const precioVenta = (inv.item?.precio || 0) / 2; // Lo vendes a mitad de precio
+    const confirmar = confirm(`¿Deseas vender ${inv.item?.nombre || inv.nombreItem} por ${precioVenta} de oro?`);
     
     if (confirmar) {
-      this.inventarioService.eliminarDelInventario(inv.id).subscribe({
+      this.inventarioService.venderItem(inv.id).subscribe({
         next: () => {
-          this.toast.success('El objeto ha sido destruido.');
-          this.cargarInventario(); // Recargamos para que desaparezca de la mochila
+          this.toast.success(`Has ganado ${precioVenta} monedas de oro.`);
+          this.cargarInventario(); 
         },
         error: (err: any) => {
-          console.error('Error al tirar item:', err);
-          this.toast.error('Una fuerza misteriosa te impide tirar este objeto.');
+          this.toast.error('El mercader no quiere comprar esta basura.');
         }
       });
     }

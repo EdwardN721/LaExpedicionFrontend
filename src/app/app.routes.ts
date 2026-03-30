@@ -92,6 +92,11 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'tienda',
+        loadComponent: () => import('./features/player/tienda/tienda').then
+        ((m) => m.Tienda),
+      },
+      {
         path: 'mapa',
         loadComponent: () =>
           import(

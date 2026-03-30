@@ -53,4 +53,12 @@ export class InventarioService {
   eliminarDelInventario(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  comprarItemMercader(dto: CrearInventarioDto): Observable<any> {
+    return this.http.post(`${this.apiUrl}/comprar`, dto);
+  }
+
+  venderItem(inventarioId: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${inventarioId}/vender`);
+  }
 }

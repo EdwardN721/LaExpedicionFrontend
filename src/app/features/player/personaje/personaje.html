@@ -70,20 +70,35 @@
           </div>
 
           <div class="w-full space-y-4">
-            <div class="bg-gray-950/50 rounded-xl p-3 border border-gray-800/50 flex justify-between items-center">
-              <div class="flex items-center text-green-400">
-                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg>
-                <span class="text-sm font-semibold text-gray-300">Salud</span>
+            
+            <div class="bg-gray-950/50 rounded-xl p-3 border border-gray-800/50">
+              <div class="flex justify-between items-center mb-1">
+                <div class="flex items-center text-green-400">
+                  <span class="text-sm font-semibold text-gray-300">Salud</span>
+                </div>
+                <span class="font-black" [ngClass]="personaje()?.saludActual! <= 20 ? 'text-red-500 animate-pulse' : 'text-green-400'">
+                  {{ personaje()?.saludActual }} / {{ personaje()?.salud }}
+                </span>
               </div>
-              <span class="font-black text-green-400">{{ personaje()?.salud }} / {{ personaje()?.salud }}</span>
-            </div>
-            <div class="bg-gray-950/50 rounded-xl p-3 border border-gray-800/50 flex justify-between items-center">
-              <div class="flex items-center text-blue-400">
-                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"></path></svg>
-                <span class="text-sm font-semibold text-gray-300">Experiencia</span>
+              <div class="w-full bg-gray-900 rounded-full h-1.5 mt-2 overflow-hidden border border-gray-800">
+                <div class="bg-green-500 h-1.5 rounded-full transition-all" 
+                     [style.width.%]="(personaje()?.saludActual! / personaje()?.salud!) * 100"></div>
               </div>
-              <span class="font-black text-blue-400">{{ personaje()?.experiencia }} XP</span>
             </div>
+
+            <div class="bg-gray-950/50 rounded-xl p-3 border border-gray-800/50 mt-4">
+              <div class="flex justify-between items-center mb-1">
+                <div class="flex items-center text-blue-400">
+                  <span class="text-sm font-semibold text-gray-300">Experiencia</span>
+                </div>
+                <span class="font-black text-blue-400">{{ personaje()?.experiencia }} / {{ personaje()?.nivel! * 100 }}</span>
+              </div>
+              <div class="w-full bg-gray-900 rounded-full h-1.5 mt-2 overflow-hidden border border-gray-800">
+                <div class="bg-blue-500 h-1.5 rounded-full transition-all" 
+                     [style.width.%]="(personaje()?.experiencia! / (personaje()?.nivel! * 100)) * 100"></div>
+              </div>
+            </div>
+
             <div class="bg-gray-950/50 rounded-xl p-3 border border-gray-800/50 flex justify-between items-center">
               <div class="flex items-center text-yellow-400">
                 <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.311c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.311c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"></path></svg>

@@ -2,14 +2,24 @@
 
 // ─── Personaje ────────────────────────────────────────────────────────
 export interface PersonajeDto {
-  id: string; // Guid
+  id: string;
+  usuarioId: string;
   nombreUsuario: string;
-  etiqueta?: string | null;
-  fuerza?: number | null;
-  energia?: number | null;
-  magia?: number | null;
-  mana?: number | null;
-  salud?: number | null;
+  
+  nivel: number;
+  experiencia: number;
+  dinero: number;
+  saludActual: number; 
+
+  etiquetaId: string;
+  etiqueta?: string;
+  
+  estadisticasId: string;
+  fuerza: number;
+  energia: number;
+  magia: number;
+  mana: number;
+  salud: number; 
 }
 
 export interface CrearPersonajeDto {
