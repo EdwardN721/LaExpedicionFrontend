@@ -70,7 +70,7 @@
           </div>
 
           <div class="w-full space-y-4">
-            
+
             <div class="bg-gray-950/50 rounded-xl p-3 border border-gray-800/50">
               <div class="flex justify-between items-center mb-1">
                 <div class="flex items-center text-green-400">
@@ -79,11 +79,10 @@
                 <span class="font-black" [ngClass]="personaje()?.saludActual! <= 20 ? 'text-red-500 animate-pulse' : 'text-green-400'">
                   {{ personaje()?.saludActual }} / {{ personaje()?.salud }}
                 </span>
-              </div>
-              <div class="w-full bg-gray-900 rounded-full h-1.5 mt-2 overflow-hidden border border-gray-800">
-                <div class="bg-green-500 h-1.5 rounded-full transition-all" 
-                     [style.width.%]="(personaje()?.saludActual! / personaje()?.salud!) * 100"></div>
-              </div>
+
+                <div class="bg-green-500 h-1.5 rounded-full transition-all"
+                     [style.width.%]="(personaje()?.saludActual! / personaje()?.salud!) * 100">
+                </div>
             </div>
 
             <div class="bg-gray-950/50 rounded-xl p-3 border border-gray-800/50 mt-4">
@@ -94,7 +93,7 @@
                 <span class="font-black text-blue-400">{{ personaje()?.experiencia }} / {{ personaje()?.nivel! * 100 }}</span>
               </div>
               <div class="w-full bg-gray-900 rounded-full h-1.5 mt-2 overflow-hidden border border-gray-800">
-                <div class="bg-blue-500 h-1.5 rounded-full transition-all" 
+                <div class="bg-blue-500 h-1.5 rounded-full transition-all"
                      [style.width.%]="(personaje()?.experiencia! / (personaje()?.nivel! * 100)) * 100"></div>
               </div>
             </div>
