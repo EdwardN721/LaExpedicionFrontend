@@ -25,4 +25,8 @@ export class PlayerService {
   getInventarioByPersonajeId(personajeId: string): Observable<InventarioDto[]> {
     return this.http.get<InventarioDto[]>(`${this.apiUrl}/Inventario/personaje/${personajeId}`);
   }
+
+  getPersonajeById(personajeId: string): Observable<PersonajeDto> {
+    return this.http.get<PersonajeDto>(`${this.apiUrl}/Personaje/${personajeId}`);
+  }
 }

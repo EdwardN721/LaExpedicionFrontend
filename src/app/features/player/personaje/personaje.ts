@@ -1,113 +1,116 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { PlayerService } from '../../../core/services/player.service';
-import { AuthService } from '../../../core/services/auth.service';
+import { InventarioService } from '../../../core/services/inventario.service';
 import { ToastService } from '../../../shared/services/toast.service';
+import { PersonajeDto } from '../../../core/models/player.models';
+import { InventarioDto } from '../../../core/models/player.models';
+import { EnumTipoItems } from '../../../core/models/item.models';
 
 @Component({
   selector: 'app-personaje',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule], // 👈 Crucial para que funcionen los botones y el form
+  imports: [CommonModule],
   templateUrl: './personaje.html'
 })
 export class PersonajeComponent implements OnInit {
-  private fb = inject(FormBuilder);
-  private playerSvc = inject(PlayerService);
-  private authSvc = inject(AuthService);
+  private playerService = inject(PlayerService);
+  private inventarioService = inject(InventarioService);
   private toast = inject(ToastService);
 
-  // Signals de estado
-  personaje = signal<any>(null);
-  loading = signal<boolean>(true);
-  saving = signal<boolean>(false);
+  personaje = signal<PersonajeDto | null>(null);
+  equipoActivo = signal<any[]>([]);
+  loading = signal(true);
+  tabActiva = signal<'base' | 'total'>('total');
 
-  // Formulario reactivo blindado
-  form: FormGroup = this.fb.group({
-    nombre: ['', [Validators.required, Validators.minLength(3)]]
+  // 1. Extraemos los atributos originales
+  poderBase = computed(() => {
+    const p = this.personaje();
+    if (!p) return { fuerza: 0, magia: 0, energia: 0, mana: 0, salud: 0 };
+    return {
+      fuerza: p.fuerza || 0,
+      magia: p.magia || 0,
+      energia: p.energia || 0,
+      mana: p.mana || 0,
+      salud: p.salud || 0
+    };
   });
 
-  // 1. Esto se ejecuta automáticamente al abrir la pantalla
+  // 2. Sumamos todo el poder que nos dan los ítems equipados
+  bonoEquipo = computed(() => {
+    const mods = { fuerza: 0, magia: 0, energia: 0, mana: 0, salud: 0 };
+
+    this.equipoActivo().forEach(inv => {
+      inv.item?.itemModificador?.forEach((mod: any) => {
+        const stat = mod.estadisticaAfectada?.toLowerCase();
+        if (stat === 'fuerza') mods.fuerza += mod.valorAjuste;
+        if (stat === 'magia') mods.magia += mod.valorAjuste;
+        if (stat === 'energia') mods.energia += mod.valorAjuste;
+        if (stat === 'mana') mods.mana += mod.valorAjuste;
+        if (stat === 'salud') mods.salud += mod.valorAjuste;
+      });
+    });
+
+    const bonoNivel = ((this.personaje()?.nivel || 1) * 10);
+    return { ...mods, bonoNivel };
+  });
+
+  poderTotal = computed(() => {
+    const base = this.poderBase();
+    const bono = this.bonoEquipo();
+    return {
+      fuerza: base.fuerza + bono.fuerza,
+      magia: base.magia + bono.magia,
+      energia: base.energia + bono.energia,
+      mana: base.mana + bono.mana,
+      salud: base.salud + bono.salud,
+      bonoNivel: bono.bonoNivel
+    };
+  });
+
+  slotsEquipo = computed(() => {
+    const equipo = this.equipoActivo();
+    return {
+      casco: equipo.find(i => i.item?.tipoItem === EnumTipoItems.Casco),
+      pechera: equipo.find(i => i.item?.tipoItem === EnumTipoItems.Pechera),
+      pantalones: equipo.find(i => i.item?.tipoItem === EnumTipoItems.Pantalones),
+      arma: equipo.find(i => i.item?.tipoItem === EnumTipoItems.ArmaUnaMano || i.item?.tipoItem === EnumTipoItems.ArmaDosManos),
+      accesorio: equipo.find(i => i.item?.tipoItem === EnumTipoItems.Accesorio)
+    };
+  });
+
   ngOnInit(): void {
     this.cargarPersonaje();
   }
 
-  // 2. Lógica para buscar si el usuario ya tiene a Apolo
   cargarPersonaje(): void {
-    this.loading.set(true);
-    
-    const user: any = this.authSvc.currentUser();
-    console.log('1. Mi Pase VIP (Token):', user); // Mira qué ID tienes asignado
-
-    const usuarioId = user?.nameid || user?.sub || user?.id;
-    console.log('2. ID exacto que mandamos al Backend:', usuarioId);
-
-    if (!usuarioId) {
-      this.toast.error('No se detectó la sesión del jugador.');
+    const personajeId = localStorage.getItem('personajeActivoId');
+    if (!personajeId) {
+      this.toast.error('No hay personaje activo.');
       this.loading.set(false);
       return;
     }
 
-    this.playerSvc.getPersonajeByUsuarioId(usuarioId).subscribe({
-      next: (personaje) => {
-        console.log('3. ¡Éxito! El backend encontró a:', personaje);
-        
-        // OJO: Por si el backend está devolviendo un arreglo [ {..} ] en lugar de un objeto {..}
-        const personajeValido = Array.isArray(personaje) ? personaje[0] : personaje;
-        
-        this.personaje.set(personajeValido);
+    this.playerService.getPersonajeById(personajeId).subscribe({
+      next: (data: PersonajeDto) => {
+        this.personaje.set(data);
 
-        const p = Array.isArray(personaje) ? personaje[0] : personaje;
-        this.personaje.set(p);
-        
-        // Guardamos el ID del personaje en memoria
-        if (p && p.id) {
-          localStorage.setItem('personajeActivoId', p.id);
-        }
+        // Pedimos su equipo
+        this.inventarioService.getInventario(personajeId, 1, 50).subscribe({
+          next: (res: any) => {
+            const lista = res?.data || res?.items || res || [];
+            const equipados = lista.filter((i: any) => i.equipado === true);
+            this.equipoActivo.set(equipados);
+            this.loading.set(false);
+          },
+          error: () => this.loading.set(false) // Termina de cargar aunque el inventario falle
+        });
 
-        this.loading.set(false);
       },
-      error: (err) => {
-        console.error('3. El backend rechazó la búsqueda:', err);
-        if (err.status === 404) {
-          // Confirmado: No tienes personajes vinculados a tu cuenta actual
-          this.personaje.set(null);
-        }
+      error: (err: any) => {
+        console.error('Error al cargar personaje', err);
+        this.toast.error('No se pudo cargar la información del héroe.'); // 👈 Buena práctica añadir esto
         this.loading.set(false);
-      }
-    });
-  }
-
-  // 3. Lógica para forjar un nuevo personaje
-  crearPersonaje(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return; // El botón ignorará el clic si no hay 3 letras mínimo
-    }
-
-    const user: any = this.authSvc.currentUser();
-    const usuarioId = user?.nameid || user?.sub || user?.id;
-
-    if (!usuarioId) return;
-
-    this.saving.set(true); // Enciende el spinner del botón
-    
-    // Objeto exacto que el Backend .NET está esperando
-    const dto = {
-      usuarioId: usuarioId,
-      nombre: this.form.value.nombre
-    };
-
-    this.playerSvc.crearPersonaje(dto as any).subscribe({
-      next: (nuevoPersonaje) => {
-        this.toast.success('¡Has nacido en este mundo!');
-        this.personaje.set(nuevoPersonaje); // Actualiza la pantalla instantáneamente
-        this.saving.set(false);
-      },
-      error: (err) => {
-        console.error('El Backend rechazó la creación:', err);
-        this.toast.error('Fallo al invocar el personaje.');
-        this.saving.set(false);
       }
     });
   }

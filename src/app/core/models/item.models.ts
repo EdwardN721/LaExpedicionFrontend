@@ -7,7 +7,8 @@ export interface ItemDto {
   descripcion?: string | null;
   estadisticaAfectada?: string | null;
   valorAjuste?: number | null;
-  precio: number; 
+  precio: number;
+  tipoItem: EnumTipoItems;
   itemModificador: ItemModificadorDto[];
 }
 
@@ -21,7 +22,7 @@ export interface ItemModificadorDto {
 export interface CrearItemModificadorDto {
   // EnumEstadistica en C# (0=Ninguna, 1=Salud, 2=Fuerza, etc.)
   // Lo enviamos como número
-  estadisticaAfectada: number; 
+  estadisticaAfectada: number;
   valorAjustado: number;
 }
 
@@ -49,4 +50,14 @@ export interface PaginationMeta {
 export interface PaginatedResponse<T> {
   data: T[];
   pagination: PaginationMeta;
+}
+
+export enum EnumTipoItems {
+  Consumible = 1,
+  Casco = 2,
+  Pechera = 3,
+  Pantalones = 4,
+  ArmaUnaMano = 5,
+  ArmaDosManos = 6,
+  Accesorio = 7
 }
