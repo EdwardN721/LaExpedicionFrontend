@@ -3,11 +3,12 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { ExpedicionRealizadaService } from '../../../core/services/expedicion-realizada.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { ExpedicionRealizadaDto, PaginationMeta } from '../../../core/models/expedition.models';
+import { ConvertirFecha } from '../../../shared/utils/ConvertirFecha'
 
 @Component({
   selector: 'app-historial',
   standalone: true,
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule],
   templateUrl: './historial.html',
   styleUrl: './historial.css'
 })
@@ -20,7 +21,7 @@ export class HistorialComponent implements OnInit {
   readonly loading = signal(true);
   readonly pagination = signal<PaginationMeta | null>(null);
   readonly currentPage = signal(1);
-  
+
   personajeId: string | null = null;
 
   ngOnInit(): void {
@@ -58,4 +59,6 @@ export class HistorialComponent implements OnInit {
     this.currentPage.set(nuevaPagina);
     this.cargarHistorial();
   }
+
+  protected readonly ConvertirFecha = ConvertirFecha;
 }

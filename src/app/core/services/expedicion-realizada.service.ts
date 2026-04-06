@@ -24,9 +24,8 @@ export class ExpedicionRealizadaService {
     );
   }
 
-  emprenderAventura(personajeId: string, expedicionId: string): Observable<ExpedicionRealizadaDto> {
-    return this.http.post<ExpedicionRealizadaDto>(`${this.apiUrl}/${personajeId}/${expedicionId}`, {});
-  }
+  emprenderAventura(dto: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}`, dto);  }
 
   obtenerEventoAleatorio(): Observable<EventoExpedicionDto> {
     return this.http.get<EventoExpedicionDto>(`${this.apiUrl}/evento-aleatorio`);
