@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ExpedicionRealizadaDto } from '../models/expedition.models'; // Del DTO que me pasaste
+import { ExpedicionRealizadaDto, EventoExpedicionDto } from '../models/expedition.models';
 import { PaginatedResponse } from '../models/item.models';
 
 @Injectable({ providedIn: 'root' })
@@ -12,7 +12,7 @@ export class ExpedicionRealizadaService {
 
   obtenerHistorial(personajeId: string, page: number, limit: number): Observable<PaginatedResponse<ExpedicionRealizadaDto>> {
     const params = new HttpParams().set('PageNumber', page).set('PageSize', limit);
-    
+
     return this.http.get<ExpedicionRealizadaDto[]>(`${this.apiUrl}/${personajeId}/historial`, { params, observe: 'response' }).pipe(
       map((response: HttpResponse<ExpedicionRealizadaDto[]>) => {
         const paginationHeader = response.headers.get('X-Pagination');
@@ -25,7 +25,10 @@ export class ExpedicionRealizadaService {
   }
 
   emprenderAventura(personajeId: string, expedicionId: string): Observable<ExpedicionRealizadaDto> {
-    // Al ser un POST sin body, enviamos un objeto vacío {}
     return this.http.post<ExpedicionRealizadaDto>(`${this.apiUrl}/${personajeId}/${expedicionId}`, {});
+  }
+
+  obtenerEventoAleatorio(): Observable<EventoExpedicionDto> {
+    return this.http.get<EventoExpedicionDto>(`${this.apiUrl}/evento-aleatorio`);
   }
 }

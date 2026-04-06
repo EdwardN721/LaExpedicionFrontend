@@ -101,6 +101,7 @@ export class PersonajeComponent implements OnInit {
             const lista = res?.data || res?.items || res || [];
             const equipados = lista.filter((i: any) => i.equipado === true);
             this.equipoActivo.set(equipados);
+            console.log("🕵️ EQUIPO ACTIVO RECIBIDO:", equipados);
             this.loading.set(false);
           },
           error: () => this.loading.set(false) // Termina de cargar aunque el inventario falle

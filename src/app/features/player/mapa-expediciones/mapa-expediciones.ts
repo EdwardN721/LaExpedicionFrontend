@@ -3,9 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ExpeditionService } from '../../../core/services/expedition.service';
 import { ExpedicionRealizadaService } from '../../../core/services/expedicion-realizada.service';
 import { ToastService } from '../../../shared/services/toast.service';
-// 👇 Asegúrate de importar tu DTO o modelo del mapa
-import { ExpedicionDto } from '../../../core/models/expedition.models'; 
-import { PaginationMeta } from '../../../core/models/expedition.models';
+import { ExpedicionDto, PaginationMeta, EventoExpedicionDto, OpcionEventoDto } from '../../../core/models/expedition.models';
 
 @Component({
   selector: 'app-mapa-expediciones',
@@ -18,11 +16,19 @@ export class MapaExpedicionesComponent implements OnInit {
   private aventuraService = inject(ExpedicionRealizadaService);
   private toast = inject(ToastService);
 
-  // 👇 Signals adaptados para la paginación (igual que en historial)
+  // Signals adaptados para la paginación
   readonly expediciones = signal<ExpedicionDto[]>([]);
   readonly pagination = signal<PaginationMeta | null>(null);
   readonly currentPage = signal(1);
-  
+
+  // Variables para los eventos
+  eventoActivo = signal<EventoExpedicionDto | null>(null);
+  mostrarModalEvento = signal(false);
+  opcionSeleccionada = signal<OpcionEventoDto | null>(null);
+
+  // Guardamos temporalmente a qué lugar quiere entrar el jugador
+  expedicionPendienteId = signal<string | null>(null);
+
   loading = signal<boolean>(true);
   enAventura = signal<boolean>(false);
 
@@ -33,17 +39,13 @@ export class MapaExpedicionesComponent implements OnInit {
   cargarMapa(): void {
     this.loading.set(true);
 
-    // 👇 Si tu servicio ahora exige paginación, le mandamos la página y el límite (ej. 10)
-    // Si tu servicio no exige paginación, quítale "this.currentPage(), 10"
     this.expeditionService.getExpediciones(this.currentPage(), 10).subscribe({
       next: (res: any) => {
-        // Adaptado para recibir la respuesta paginada { data: [...], pagination: {...} }
         this.expediciones.set(res?.data || res?.items || res || []);
-        
+
         if (res?.pagination) {
           this.pagination.set(res.pagination);
         }
-
         this.loading.set(false);
       },
       error: (err: any) => {
@@ -54,6 +56,7 @@ export class MapaExpedicionesComponent implements OnInit {
     });
   }
 
+  // 🎭 FASE 1: El jugador elige un lugar. Pedimos el evento al servidor y abrimos el Modal.
   emprenderExpedicion(expedicionId: string): void {
     const personajeId = localStorage.getItem('personajeActivoId');
 
@@ -63,25 +66,51 @@ export class MapaExpedicionesComponent implements OnInit {
     }
 
     this.enAventura.set(true);
-    
-    // Llamada al endpoint POST vacío que tienes en el backend
-    this.aventuraService.emprenderAventura(personajeId, expedicionId).subscribe({
-      next: (resultado: any) => {
-        this.toast.success('¡Has regresado de la expedición con gloria!');
+
+    this.aventuraService.obtenerEventoAleatorio().subscribe({
+      next: (evento) => {
+        this.eventoActivo.set(evento);
+        this.expedicionPendienteId.set(expedicionId); // Guardamos el lugar para después
+        this.opcionSeleccionada.set(null);
+
+        this.mostrarModalEvento.set(true);
         this.enAventura.set(false);
-        
-        // Opcional: Podrías redirigir al historial para ver qué pasó
-        // this.router.navigate(['/play/historial']);
       },
-      error: (err: any) => {
-        console.error('Error en expedición:', err);
-        this.toast.error('La expedición ha fracasado catastróficamente.');
+      error: (err) => {
+        console.error('Error al cargar el evento', err);
+        this.toast.error('El Dungeon Master no está disponible en este momento.');
         this.enAventura.set(false);
       }
     });
   }
-  
-  // 👇 Por si quieres poner botones de paginación en el HTML
+
+  // ⚔️ FASE 2: El jugador leyó la historia y tomó una decisión en el Modal.
+  ejecutarDecision(opcion: OpcionEventoDto): void {
+    this.opcionSeleccionada.set(opcion);
+    this.toast.info('Los dados están rodando...');
+
+    const personajeId = localStorage.getItem('personajeActivoId');
+    const expedicionId = this.expedicionPendienteId();
+
+    if (!personajeId || !expedicionId) return;
+
+    this.enAventura.set(true);
+
+    this.aventuraService.emprenderAventura(personajeId, expedicionId).subscribe({
+      next: (resultado: any) => {
+        this.mostrarModalEvento.set(false); // Cerramos el Modal
+        this.toast.success('¡La aventura concluyó! Revisa tu bitácora.');
+        this.enAventura.set(false);
+      },
+      error: (err: any) => {
+        console.error('Error en expedición:', err);
+        this.mostrarModalEvento.set(false);
+        this.toast.error('El destino ha sido cruel contigo...');
+        this.enAventura.set(false);
+      }
+    });
+  }
+
   cambiarPagina(nuevaPagina: number): void {
     this.currentPage.set(nuevaPagina);
     this.cargarMapa();

@@ -48,3 +48,23 @@ export interface ExpedicionRealizadaDto {
   experienciaGanada: number;
   dineroGanado: number;
 }
+
+export interface OpcionEventoDto {
+  idOpcion: string;
+  texto: string;
+  estadisticaRequerida: string;
+  dificultad: number;
+  textoExito: string;
+  textoFallo: string;
+  recompensaOro: number;
+  recompensaXp: number;
+  penalizacionSalud: number;
+  itemRecompensa: string;
+}
+
+export interface EventoExpedicionDto {
+  id: string;
+  nombre: string;
+  narrativa: string;
+  opciones: OpcionEventoDto[];
+}
