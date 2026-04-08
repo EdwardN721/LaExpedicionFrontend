@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ToastService } from '../../../shared/services/toast.service';
 import { AppUser } from '../../../core/models/user.models';
-import { PaginationMeta } from '../../../core/models/item.models';
+import { PaginationMeta } from '../../../core/models/pagination.models';
 import { environment } from '../../../../environments/environment';
 
 @Component({

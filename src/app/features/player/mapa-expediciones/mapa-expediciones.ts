@@ -105,12 +105,7 @@ export class MapaExpedicionesComponent implements OnInit {
     this.aventuraService.emprenderAventura(payload).subscribe({
       next: (resultado: any) => {
         this.mostrarModalEvento.set(false);
-        // Mostrar en el Toast si fue éxito o fallo
-        if (resultado.exito || resultado.esExito) {
-          this.toast.success('¡Victoria! Revisa tu bitácora.');
-        } else {
-          this.toast.error('Has sufrido heridas. Revisa tu bitácora.');
-        }
+        this.toast.success('¡La aventura concluyó! Revisa tu bitácora.');
         this.enAventura.set(false);
       },
       error: (err: any) => {

@@ -3,163 +3,171 @@
     <div>
       <h2 class="font-rpg text-2xl text-rpg-text">Gestión de Items</h2>
       <p class="text-rpg-muted text-sm mt-0.5">
-        {{ pagination()?.totalCount ?? 0 }} items en el mundo
+        {{ totalCount }} items en la armería
       </p>
     </div>
     <button class="btn-primary" (click)="openModal()">+ Nuevo Item</button>
   </div>
 
   @if (loading()) {
-  <div class="rpg-card animate-pulse space-y-3">
-    @for (i of [1,2,3]; track i) {
-    <div class="h-12 bg-rpg-border/40 rounded"></div>
-    }
-  </div>
-  } @else {
-  <div class="rpg-card overflow-x-auto p-0">
-    <table class="rpg-table">
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Descripción</th>
-          <th>Modificador Principal</th>
-          <th class="text-right">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of items(); track item.id) {
-        <tr>
-          <td class="font-medium text-rpg-text">{{ item.nombre }}</td>
-          <td class="text-rpg-muted truncate max-w-xs">
-            {{ item.descripcion || 'Sin descripción' }}
-          </td>
-          <td>
-            @if(item.estadisticaAfectada && item.valorAjuste) {
-            <span class="badge-success">
-              {{ item.estadisticaAfectada }} (+{{ item.valorAjuste }})
-            </span>
-            } @else {
-            <span class="text-rpg-muted text-xs italic">Ninguno</span>
-            }
-          </td>
-          <td class="text-right space-x-2">
-            <button
-              class="text-rpg-gold hover:underline text-sm"
-              (click)="openModal(item)"
-            >
-              Editar
-            </button>
-            <button
-              class="text-rpg-danger hover:underline text-sm"
-              (click)="delete(item)"
-            >
-              Eliminar
-            </button>
-          </td>
-        </tr>
-        } @empty {
-        <tr>
-          <td colspan="4" class="text-center text-rpg-muted py-10">
-            La forja está vacía. No hay items registrados.
-          </td>
-        </tr>
-        }
-      </tbody>
-    </table>
-  </div>
-
-  @if (pagination(); as pg) {
-  <div class="flex items-center justify-between mt-4 text-sm text-rpg-muted">
-    <span>Página {{ pg.currentPage }} de {{ pg.totalPages }}</span>
-    <div class="flex gap-2">
-      <button
-        class="btn-secondary py-1.5 px-3 text-xs"
-        [disabled]="!pg.hasPrevious"
-        (click)="changePage(pg.currentPage - 1)"
-      >
-        Anterior
-      </button>
-      <button
-        class="btn-secondary py-1.5 px-3 text-xs"
-        [disabled]="!pg.hasNext"
-        (click)="changePage(pg.currentPage + 1)"
-      >
-        Siguiente
-      </button>
+    <div class="rpg-card animate-pulse space-y-3">
+      @for (i of [1,2,3]; track i) {
+        <div class="h-12 bg-rpg-border/40 rounded"></div>
+      }
     </div>
-  </div>
-  } }
+  } @else {
+
+    <div class="rpg-card overflow-x-auto p-0">
+      <table class="rpg-table w-full text-left">
+        <thead>
+        <tr>
+          <th class="p-4">Imagen</th>
+          <th class="p-4">Nombre</th>
+          <th class="p-4">Descripción</th>
+          <th class="p-4">Precio</th>
+          <th class="p-4">Modificador</th>
+          <th class="text-right p-4">Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+          @for (item of items(); track item.id) {
+            <tr class="border-b border-rpg-border/50 hover:bg-rpg-bg/30">
+              <td class="p-4">
+                @if(item.imagenUrl) {
+                  <img [src]="item.imagenUrl" alt="Item" class="w-10 h-10 object-cover rounded bg-rpg-bg border border-rpg-border">
+                } @else {
+                  <div class="w-10 h-10 rounded bg-rpg-border/30 flex items-center justify-center text-[10px] text-rpg-muted">Sin Img</div>
+                }
+              </td>
+              <td class="font-medium text-rpg-text p-4">{{ item.nombre }}</td>
+              <td class="text-rpg-muted truncate max-w-[150px] p-4" [title]="item.descripcion">
+                {{ item.descripcion || 'Sin descripción' }}
+              </td>
+              <td class="text-rpg-gold p-4">{{ item.precio }} 🪙</td>
+
+              <td class="p-4">
+                @if(item.itemModificador && item.itemModificador.length > 0) {
+                  <span class="badge-success text-xs">
+                {{ item.itemModificador[0].estadisticaAfectada }} (+{{ item.itemModificador[0].valorAjuste }})
+              </span>
+                } @else {
+                  <span class="text-rpg-muted text-xs italic">Ninguno</span>
+                }
+              </td>
+              <td class="text-right space-x-3 p-4">
+                <button class="text-rpg-gold hover:text-amber-300 transition-colors text-sm" (click)="openModal(item)">
+                  Editar
+                </button>
+                <button class="text-rpg-danger hover:text-red-400 transition-colors text-sm" (click)="delete(item)">
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="text-center text-rpg-muted py-10">
+                La forja está vacía. No hay items registrados.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex items-center justify-between mt-4 text-sm text-rpg-muted bg-rpg-card p-3 rounded-lg border border-rpg-border">
+      <span>Página <strong class="text-rpg-text">{{ currentPage }}</strong> de {{ totalPages }}</span>
+      <div class="flex gap-2">
+        <button class="btn-secondary py-1.5 px-3 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                [disabled]="!hasPrevious" (click)="paginaAnterior()">
+          Anterior
+        </button>
+        <button class="btn-secondary py-1.5 px-3 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                [disabled]="!hasNext" (click)="paginaSiguiente()">
+          Siguiente
+        </button>
+      </div>
+    </div>
+  }
 </div>
 
 @if (showModal()) {
-<div
-  class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
-  (click)="closeModal()"
->
-  <div class="rpg-card w-full max-w-lg" (click)="$event.stopPropagation()">
-    <h3 class="font-rpg text-xl text-rpg-text mb-5">
-      {{ editing() ? 'Editar Item' : 'Forjar Nuevo Item' }}
-    </h3>
+  <div class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" (click)="closeModal()">
+    <div class="rpg-card w-full max-w-lg border border-rpg-gold/30 shadow-2xl" (click)="$event.stopPropagation()">
+      <h3 class="font-rpg text-2xl text-rpg-gold mb-5 border-b border-rpg-border pb-2">
+        {{ editing() ? 'Modificar Ítem' : 'Forjar Nuevo Ítem' }}
+      </h3>
 
-    <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
-      <div>
-        <label class="rpg-label">Nombre</label>
-        <input class="rpg-input" formControlName="nombre" />
-      </div>
-      <div>
-        <label class="rpg-label">Descripción</label>
-        <textarea
-          class="rpg-input resize-none"
-          rows="3"
-          formControlName="descripcion"
-        ></textarea>
-      </div>
+      <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
+        <div>
+          <label class="rpg-label block mb-1">Nombre del Ítem</label>
+          <input class="rpg-input w-full" formControlName="nombre" />
+        </div>
 
-      @if (!editing()) {
-      <div class="p-3 border border-rpg-border rounded-lg bg-rpg-bg/50">
-        <label class="rpg-label text-rpg-gold"
-          >Modificador Inicial (Opcional)</label
-        >
-        <div class="grid grid-cols-2 gap-3 mt-2">
+        <div>
+          <label class="rpg-label block mb-1">Descripción</label>
+          <textarea class="rpg-input resize-none w-full" rows="3" formControlName="descripcion"></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="text-xs text-rpg-muted">Estadística</label>
-            <select
-              class="rpg-input text-sm"
-              formControlName="estadisticaAfectada"
-            >
-              <option [value]="0">Ninguna</option>
-              <option [value]="1">Salud</option>
-              <option [value]="2">Fuerza</option>
-              <option [value]="4">Energía</option>
-              <option [value]="5">Magia</option>
-              <option [value]="6">Maná</option>
+            <label class="rpg-label block mb-1">Precio 🪙</label>
+            <input type="number" class="rpg-input w-full" formControlName="precio" min="0" />
+          </div>
+          <div>
+            <label class="rpg-label block mb-1">Clase de Ítem</label>
+            <select class="rpg-input w-full" formControlName="tipoItem">
+              <option [value]="0">Arma Genérica</option>
+              <option [value]="1">Consumible</option>
+              <option [value]="2">Casco</option>
+              <option [value]="3">Pechera</option>
+              <option [value]="4">Pantalones</option>
+              <option [value]="5">Arma de Una Mano</option>
+              <option [value]="6">Arma de Dos Manos</option>
+              <option [value]="7">Accesorio</option>
             </select>
           </div>
-          <div>
-            <label class="text-xs text-rpg-muted">Valor</label>
-            <input
-              class="rpg-input text-sm"
-              type="number"
-              formControlName="valorAjustado"
-            />
-          </div>
         </div>
-      </div>
-      }
 
-      <div class="flex justify-end gap-3 pt-4 border-t border-rpg-border mt-6">
-        <button type="button" class="btn-secondary" (click)="closeModal()">
-          Cancelar
-        </button>
-        <button type="submit" class="btn-primary" [disabled]="saving()">
-          @if (saving()) {
-          <span
-            class="inline-block w-4 h-4 border-2 border-rpg-bg/40 border-t-rpg-bg rounded-full animate-spin mr-2"
-          ></span>
-          } {{ editing() ? 'Guardar Cambios' : 'Forjar' }}
-        </button>
-      </div>
-    </form>
+        <div class="p-3 border border-dashed border-rpg-border rounded-lg bg-rpg-bg/30">
+          <label class="rpg-label block mb-2 text-rpg-gold">Ilustración (Blob Storage)</label>
+          <input type="file" (change)="onFileSelected($event)" accept="image/*"
+                 class="text-sm text-rpg-muted file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-bold file:bg-rpg-gold file:text-black hover:file:bg-amber-400 cursor-pointer w-full" />
+        </div>
+
+        @if (!editing()) {
+          <div class="p-3 border border-rpg-border rounded-lg bg-rpg-bg/50 mt-2">
+            <label class="rpg-label text-rpg-gold">Modificador Inicial (Opcional)</label>
+            <div class="grid grid-cols-2 gap-3 mt-2">
+              <div>
+                <label class="text-xs text-rpg-muted block mb-1">Estadística</label>
+                <select class="rpg-input text-sm w-full" formControlName="estadisticaAfectada">
+                  <option [value]="0">Ninguna</option>
+                  <option [value]="1">Salud</option>
+                  <option [value]="2">Fuerza</option>
+                  <option [value]="4">Energía</option>
+                  <option [value]="5">Magia</option>
+                  <option [value]="6">Maná</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs text-rpg-muted block mb-1">Valor (+)</label>
+                <input class="rpg-input text-sm w-full" type="number" formControlName="valorAjustado" />
+              </div>
+            </div>
+          </div>
+        }
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-rpg-border mt-6">
+          <button type="button" class="btn-secondary" (click)="closeModal()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-primary" [disabled]="form.invalid || saving()">
+            @if (saving()) {
+              <span class="inline-block w-4 h-4 border-2 border-black/40 border-t-black rounded-full animate-spin mr-2"></span>
+            } {{ editing() ? 'Guardar Cambios' : 'Forjar en Armería' }}
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
 }

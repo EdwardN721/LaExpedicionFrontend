@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { adminGuard } from './core/guards/admin.guard';
+import { AdminShellComponent } from './features/admin/admin-shell/admin-shell';
 
 export const routes: Routes = [
   // ─── Public routes ──────────────────────────────────────────────
@@ -21,16 +23,16 @@ export const routes: Routes = [
   // ─── Admin routes (role: Admin) ──────────────────────────────────
   {
     path: 'admin',
-    canActivate: [authGuard],
-    data: { role: 'Admin' },
-    loadComponent: () =>
-      import('./features/admin/admin-shell/admin-shell').then(
-        (m) => m.AdminShellComponent
-      ),
+    component: AdminShellComponent,
+    canActivate: [authGuard, adminGuard],
     children: [
       {
         path: '',
         pathMatch: 'full',
+        redirectTo: 'dashboard'
+      },
+      {
+        path: 'dashboard',
         loadComponent: () =>
           import('./features/admin/dashboard/admin-dashboard').then(
             (m) => m.AdminDashboardComponent

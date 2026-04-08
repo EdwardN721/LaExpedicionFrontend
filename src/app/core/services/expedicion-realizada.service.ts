@@ -3,7 +3,7 @@ import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ExpedicionRealizadaDto, EventoExpedicionDto } from '../models/expedition.models';
-import { PaginatedResponse } from '../models/item.models';
+import { PaginatedResponse } from '../models/pagination.models';
 
 @Injectable({ providedIn: 'root' })
 export class ExpedicionRealizadaService {

@@ -3,7 +3,7 @@ import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { InventarioDto, CrearInventarioDto, ActualizarInventarioDto } from '../models/player.models';
-import { PaginatedResponse, PaginationMeta } from '../models/item.models';
+import { PaginatedResponse, PaginationMeta } from '../models/pagination.models';
 
 @Injectable({ providedIn: 'root' })
 export class InventarioService {
@@ -12,7 +12,7 @@ export class InventarioService {
 
   obtenerInventario(personajeId: string, page: number, limit: number): Observable<PaginatedResponse<InventarioDto>> {
     const params = new HttpParams().set('PageNumber', page).set('PageSize', limit);
-    
+
     return this.http.get<InventarioDto[]>(`${this.apiUrl}/personaje/${personajeId}`, { params, observe: 'response' }).pipe(
       map((response: HttpResponse<InventarioDto[]>) => {
         const paginationHeader = response.headers.get('X-Pagination');

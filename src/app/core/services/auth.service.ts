@@ -55,7 +55,7 @@ export class AuthService {
   }
 
   register(payload: RegisterRequest): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/api/Usuario`, payload);    
+    return this.http.post<any>(`${environment.apiUrl}/api/Usuario`, payload);
   }
 
   logout(): void {
@@ -78,7 +78,7 @@ export class AuthService {
 
       // 1. Extraemos el texto en Base64Url y lo pasamos a Base64 normal
       let payloadBase64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-      
+
       // 2. ¡EL TRUCO MÁGICO! Rellenamos con "=" para que ningún navegador explote
       const pad = payloadBase64.length % 4;
       if (pad) {
@@ -97,5 +97,29 @@ export class AuthService {
       return null;
     }
   }
-  
+
+  //
+  get isAdmin(): boolean {
+    const token = this._token();
+    if (!token) return false;
+
+    try {
+      // Desencriptamos la parte intermedia del JWT (Payload)
+      const payload = JSON.parse(atob(token.split('.')[1]));
+
+      // ASP.NET Core Identity guarda el rol en esta propiedad larga por defecto, o a veces en "role"
+      const role = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || payload.role;
+
+      // Retorna true si es un arreglo que contiene 'Admin', o si es exactamente el string 'Admin'
+      if (Array.isArray(role)) {
+        return role.includes('Admin');
+      }
+      return role === 'Admin';
+
+    } catch (e) {
+      return false;
+    }
+  }
+
+
 }

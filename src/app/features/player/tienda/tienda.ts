@@ -25,10 +25,15 @@ export class Tienda implements OnInit {
   }
 
   cargarArticulos(): void {
-    this.itemSvc.getAll(1, 50).subscribe({
-      next: (res: any) => {
-        const lista = res?.data || res?.items || res || [];
-        this.articulos.set(Array.isArray(lista) ? lista : []);
+    const params = {
+      PageNumber: 1,
+      PageSize: 50
+    }
+
+    this.itemSvc.getItems(params).subscribe({
+      next: (res) => {
+        const lista = res.data || [];
+        this.articulos.set(lista);
         this.loading.set(false);
       },
       error: () => {

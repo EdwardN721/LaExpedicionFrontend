@@ -1,6 +1,3 @@
-// src/app/core/models/item.models.ts
-
-// Usamos string para mapear los Guid de C#
 export interface ItemDto {
   id: string;
   nombre: string;
@@ -10,6 +7,7 @@ export interface ItemDto {
   precio: number;
   tipoItem: EnumTipoItems;
   itemModificador: ItemModificadorDto[];
+  imagenUrl?: string | null;
 }
 
 export interface ItemModificadorDto {
@@ -29,30 +27,24 @@ export interface CrearItemModificadorDto {
 export interface CrearItemDto {
   nombre: string;
   descripcion?: string | null;
+  precio: number;
+  tipoItem: number;
   modificadores?: CrearItemModificadorDto[] | null;
+  imagen?: File | null;
 }
 
 export interface ActualizarItemDto {
   id: string;
   nombre: string;
-  descripcion: string; // En tu backend no es nullable al actualizar
+  descripcion: string;
+  precio: number;
+  tipoItem: number;
+  imagen?: File | null;
 }
 
-// Reutilizamos la paginación
-export interface PaginationMeta {
-  currentPage: number;
-  totalPages: number;
-  totalCount: number;
-  hasPrevious: boolean;
-  hasNext: boolean;
-}
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  pagination: PaginationMeta;
-}
 
 export enum EnumTipoItems {
+  SinEtiqueta = 0,
   Consumible = 1,
   Casco = 2,
   Pechera = 3,
@@ -61,3 +53,4 @@ export enum EnumTipoItems {
   ArmaDosManos = 6,
   Accesorio = 7
 }
+

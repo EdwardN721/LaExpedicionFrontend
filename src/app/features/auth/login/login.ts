@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -12,7 +12,7 @@ import { ToastService } from '../../../shared/services/toast.service';
   templateUrl: `./login.html`,
   styleUrl: './login.css'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit{
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
@@ -25,6 +25,16 @@ export class LoginComponent {
     password: ['', Validators.required],
   });
 
+  ngOnInit(): void {
+    if (this.auth.isAuthenticated()) {
+      if (this.auth.isAdmin) {
+        this.router.navigate(['/admin/dashboard']);
+      } else {
+        this.router.navigate(['/play/mapa']);
+      }
+    }
+  }
+
   onSubmit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -32,14 +42,18 @@ export class LoginComponent {
     }
 
     this.loading.set(true); // El botón empieza a girar
-    
-    this.auth.login(this.form.getRawValue() as any).subscribe({
+
+    this.auth.login(this.form.value as any).subscribe({
       next: () => {
         this.loading.set(false); // 👈 ¡ESTO DETIENE EL GIRO DEL BOTÓN!
         this.toast.success('Bienvenido a La Expedición.');
-        
-        // Forzamos la redirección directa al juego para no depender del Rol por ahora
-        this.router.navigate(['/play']); 
+
+        if (this.auth.isAdmin){
+          this.router.navigate(['/admin/dashboard'])
+        } else {
+          this.router.navigate(['/play/mapa'])
+        }
+
       },
       error: (err) => {
         this.loading.set(false); // Detiene el giro si hay error
