@@ -8,6 +8,7 @@ export interface ItemDto {
   tipoItem: EnumTipoItems;
   itemModificador: ItemModificadorDto[];
   imagenUrl?: string | null;
+  activo: boolean;
 }
 
 export interface ItemModificadorDto {
@@ -40,6 +41,7 @@ export interface ActualizarItemDto {
   precio: number;
   tipoItem: number;
   imagen?: File | null;
+  activo: boolean;
 }
 
 

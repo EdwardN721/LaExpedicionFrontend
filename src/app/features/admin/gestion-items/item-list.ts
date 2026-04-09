@@ -34,7 +34,8 @@ export class ItemListComponent implements OnInit {
     precio: [0, [Validators.required, Validators.min(0)]],
     tipoItem: [0, Validators.required],
     estadisticaAfectada: [0],
-    valorAjustado: [0]
+    valorAjustado: [0],
+    activo: [true]
   });
 
   currentPage = 1;
@@ -99,7 +100,8 @@ export class ItemListComponent implements OnInit {
         nombre: item.nombre,
         descripcion: item.descripcion || '',
         precio: item.precio || 0,
-        tipoItem: item.tipoItem || 0
+        tipoItem: item.tipoItem || 0,
+        activo: item.activo
       });
     } else {
       this.form.reset({estadisticaAfectada: 0, valorAjustado: 0, precio: 0, tipoItem: 0});
@@ -134,10 +136,11 @@ export class ItemListComponent implements OnInit {
     formData.append('descripcion', formValue.descripcion || '');
     formData.append('precio', formValue.precio?.toString() || '0');
     formData.append('tipoItem', formValue.tipoItem?.toString() || '0');
+    formData.append('Activo', formValue.activo ? 'true' : 'false');
 
     // Adjuntamos la imagen a Azure
     if (this.archivoSeleccionado) {
-      formData.append('imagenArchivo', this.archivoSeleccionado);
+      formData.append('Imagen', this.archivoSeleccionado, this.archivoSeleccionado.name);
     }
 
     // Lógica para adjuntar modificadores (C# necesita que los arrays en FormData se manden con índices)

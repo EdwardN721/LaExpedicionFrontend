@@ -26,6 +26,7 @@
           <th class="p-4">Descripción</th>
           <th class="p-4">Precio</th>
           <th class="p-4">Modificador</th>
+          <th class="p-4">Activo</th>
           <th class="text-right p-4">Acciones</th>
         </tr>
         </thead>
@@ -34,9 +35,11 @@
             <tr class="border-b border-rpg-border/50 hover:bg-rpg-bg/30">
               <td class="p-4">
                 @if(item.imagenUrl) {
-                  <img [src]="item.imagenUrl" alt="Item" class="w-10 h-10 object-cover rounded bg-rpg-bg border border-rpg-border">
+                  <div class="relative w-12 h-12 overflow-hidden rounded bg-rpg-bg border border-rpg-border flex-shrink-0">
+                    <img [src]="item.imagenUrl" alt="Item" class="absolute inset-0 w-full h-full object-cover object-center">
+                  </div>
                 } @else {
-                  <div class="w-10 h-10 rounded bg-rpg-border/30 flex items-center justify-center text-[10px] text-rpg-muted">Sin Img</div>
+                  <div class="w-12 h-12 rounded bg-rpg-border/30 flex items-center justify-center text-[10px] text-rpg-muted">Sin Img</div>
                 }
               </td>
               <td class="font-medium text-rpg-text p-4">{{ item.nombre }}</td>
@@ -52,6 +55,13 @@
               </span>
                 } @else {
                   <span class="text-rpg-muted text-xs italic">Ninguno</span>
+                }
+              </td>
+              <td class="p-4">
+                @if(item.activo) {
+                  <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded border border-green-500/50">Activo</span>
+                } @else {
+                  <span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded border border-red-500/50">Descontinuado</span>
                 }
               </td>
               <td class="text-right space-x-3 p-4">
@@ -116,7 +126,7 @@
           <div>
             <label class="rpg-label block mb-1">Clase de Ítem</label>
             <select class="rpg-input w-full" formControlName="tipoItem">
-              <option [value]="0">Arma Genérica</option>
+              <option [value]="0">Sin Etiqueta</option>
               <option [value]="1">Consumible</option>
               <option [value]="2">Casco</option>
               <option [value]="3">Pechera</option>
@@ -128,8 +138,16 @@
           </div>
         </div>
 
+        <div>
+          <label class="rpg-label block mb-1">Estado</label>
+          <select class="rpg-input w-full" formControlName="activo">
+            <option [ngValue]="true">Activo (En Tienda)</option>
+            <option [ngValue]="false">Descontinuado</option>
+          </select>
+        </div>
+
         <div class="p-3 border border-dashed border-rpg-border rounded-lg bg-rpg-bg/30">
-          <label class="rpg-label block mb-2 text-rpg-gold">Ilustración (Blob Storage)</label>
+          <label class="rpg-label block mb-2 text-rpg-gold">Ilustración</label>
           <input type="file" (change)="onFileSelected($event)" accept="image/*"
                  class="text-sm text-rpg-muted file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-bold file:bg-rpg-gold file:text-black hover:file:bg-amber-400 cursor-pointer w-full" />
         </div>
