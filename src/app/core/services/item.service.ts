@@ -16,37 +16,26 @@ export class ItemService {
   private readonly apiUrl = `${environment.apiUrl}/api/Item`;
 
   getItems(params?: any): Observable<PaginatedResponse<ItemDto>> {
-    return this.http.get<ItemDto[]>(this.apiUrl, {
-      params,
-      observe: 'response'
+    return this.http.get<any>(this.apiUrl, {
+      params
     }).pipe(
-      map((response: HttpResponse<ItemDto[]>) => {
-        const paginationHeader = response.headers.get('X-Pagination');
-        let meta: PaginationMeta;
-
-        if (paginationHeader) {
-          const rawMeta = JSON.parse(paginationHeader);
-          meta = {
-            currentPage: rawMeta.CurrentPage ?? rawMeta.currentPage,
-            totalPages: rawMeta.TotalPages ?? rawMeta.totalPages,
-            totalCount: rawMeta.TotalCount ?? rawMeta.totalCount,
-            hasPrevious: rawMeta.HasPrevious ?? rawMeta.hasPrevious,
-            hasNext: rawMeta.HasNext ?? rawMeta.hasNext
-          };
-        } else {
-          meta = { currentPage: 1, totalPages: 1, totalCount: response.body?.length || 0, hasPrevious: false, hasNext: false };
-        }
-
+      map(res  => {
         return {
-          data: response.body || [],
-          pagination: meta
-        };
+          data: res.data || [],
+          pagination: {
+            currentPage: res.metadata?.currentPage || 1,
+            totalPages: res.metadata?.totalPages || 1,
+            totalCount: res.metadata?.totalCount || 0,
+            hasPrevious: res.metadata?.hasPrevious || false,
+            hasNext: res.metadata?.hasNext || false
+          }
+        }
       })
     );
   }
 
   getById(id: string): Observable<ItemDto> {
-    return this.http.get<ItemDto>(`${this.apiUrl}/Item/${id}`);
+    return this.http.get<ItemDto>(`${this.apiUrl}/${id}`);
   }
 
   create(formData: FormData): Observable<ItemDto> {
