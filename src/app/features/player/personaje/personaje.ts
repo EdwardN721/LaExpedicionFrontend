@@ -1,5 +1,5 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, signal, computed, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { PlayerService } from '../../../core/services/player.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { ToastService } from '../../../shared/services/toast.service';
@@ -17,6 +17,7 @@ export class PersonajeComponent implements OnInit {
   private playerService = inject(PlayerService);
   private inventarioService = inject(InventarioService);
   private toast = inject(ToastService);
+  private platformId = inject(PLATFORM_ID); // Inyectamos el identificador de plataforma
 
   personaje = signal<PersonajeDto | null>(null);
   equipoActivo = signal<any[]>([]);
@@ -84,6 +85,10 @@ export class PersonajeComponent implements OnInit {
   }
 
   cargarPersonaje(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
     const personajeId = localStorage.getItem('personajeActivoId');
     if (!personajeId) {
       this.toast.error('No hay personaje activo.');
@@ -98,7 +103,13 @@ export class PersonajeComponent implements OnInit {
         // Pedimos su equipo
         this.inventarioService.getInventario(personajeId, 1, 50).subscribe({
           next: (res: any) => {
-            const lista = res?.data || res?.items || res || [];
+            let lista = [];
+            if (Array.isArray(res)) lista = res;
+            else if (res && Array.isArray(res.$values)) lista = res.$values;
+            else if (res && res.data) {
+              lista = Array.isArray(res.item) ? res.data : (res.data.$values || []);
+            }
+
             const equipados = lista.filter((i: any) => i.equipado === true);
             this.equipoActivo.set(equipados);
             console.log("🕵️ EQUIPO ACTIVO RECIBIDO:", equipados);

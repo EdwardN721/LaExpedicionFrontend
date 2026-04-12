@@ -30,7 +30,7 @@ export class LoginComponent implements OnInit{
       if (this.auth.isAdmin) {
         this.router.navigate(['/admin/dashboard']);
       } else {
-        this.router.navigate(['/play/mapa']);
+        this.router.navigate(['/play/personaje']);
       }
     }
   }
@@ -45,13 +45,13 @@ export class LoginComponent implements OnInit{
 
     this.auth.login(this.form.value as any).subscribe({
       next: () => {
-        this.loading.set(false); // 👈 ¡ESTO DETIENE EL GIRO DEL BOTÓN!
+        this.loading.set(false);
         this.toast.success('Bienvenido a La Expedición.');
 
         if (this.auth.isAdmin){
           this.router.navigate(['/admin/dashboard'])
         } else {
-          this.router.navigate(['/play/mapa'])
+          this.router.navigate(['/play/personaje'])
         }
 
       },

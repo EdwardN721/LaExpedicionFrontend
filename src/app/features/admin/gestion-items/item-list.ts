@@ -58,14 +58,20 @@ export class ItemListComponent implements OnInit {
     };
 
     this.svc.getItems(params).subscribe({
-      next: (res) => {
-        this.items.set(res.data);
+      next: (res: any) => {
+        let itemsArray = res.data || [];
+        if (res.data && Array.isArray(res.data.$values)) {
+          itemsArray = res.data.$values;
+        }
 
-        this.currentPage = res.pagination.currentPage;
-        this.totalPages = res.pagination.totalPages;
-        this.totalCount = res.pagination.totalCount;
-        this.hasNext = res.pagination.hasNext;
-        this.hasPrevious = res.pagination.hasPrevious;
+        this.items.set(itemsArray);
+
+        const meta = res.pagination || res.metadata || {};
+        this.currentPage = meta.currentPage || 1;
+        this.totalPages = meta.totalPages || 1;
+        this.totalCount = meta.totalCount || 0;
+        this.hasNext = meta.hasNext || false;
+        this.hasPrevious = meta.hasPrevious || false;
 
         this.loading.set(false);
       },
