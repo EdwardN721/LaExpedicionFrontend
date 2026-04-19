@@ -12,7 +12,7 @@ export class PlayerService {
 
   // ─── Personajes ───
   // Obtiene el personaje de un usuario específico
-  getPersonajeByUsuarioId(usuarioId: string): Observable<PersonajeDto> {
+  getPersonajeByUsuarioId(usuarioId: string): Observable<any> {
     return this.http.get<PersonajeDto>(`${this.apiUrl}/Personaje/usuario/${usuarioId}`);
   }
 

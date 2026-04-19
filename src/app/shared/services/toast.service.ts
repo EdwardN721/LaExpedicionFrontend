@@ -3,13 +3,13 @@ import { Injectable, signal } from '@angular/core';
 export interface ToastMessage {
   id: number;
   message: string;
-  type: 'success' | 'error' | 'info';
+  type: 'success' | 'error' | 'info' | 'warning';
 }
 
 @Injectable({ providedIn: 'root' })
 export class ToastService {
   private toastIdCounter = 0;
-  
+
   // Exponemos las notificaciones como un Signal para poder leerlas en el HTML
   readonly toasts = signal<ToastMessage[]>([]);
 
@@ -29,10 +29,14 @@ export class ToastService {
     this.toasts.update(current => current.filter(t => t.id !== id));
   }
 
-  private show(message: string, type: 'success' | 'error' | 'info'): void {
+  warning(message: string) {
+    this.show(message, 'warning'); // O como sea que esté estructurado tu servicio internamente
+  }
+
+  private show(message: string, type: 'success' | 'error' | 'info' | 'warning'): void {
     const id = ++this.toastIdCounter;
     const newToast: ToastMessage = { id, message, type };
-    
+
     this.toasts.update(current => [...current, newToast]);
 
     // Auto-eliminar después de 3 segundos

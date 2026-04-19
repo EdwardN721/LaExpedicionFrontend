@@ -6,7 +6,7 @@
           <p class="text-rpg-muted text-sm">Ingresa tus credenciales para continuar</p>
         </div>
 
-        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-4">
           <div>
             <label class="rpg-label">Correo Electrónico</label>
             <input type="email" formControlName="email" class="rpg-input" placeholder="aventurero@gremio.com" />
@@ -26,9 +26,8 @@
         </form>
 
         <div class="mt-6 text-center text-sm text-rpg-muted">
-          ¿Aún no tienes cuenta? 
+          ¿Aún no tienes cuenta?
           <a routerLink="/register" class="text-rpg-gold hover:underline">Regístrate</a>
         </div>
       </div>
     </div>
-  
